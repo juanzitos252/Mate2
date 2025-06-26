@@ -1929,7 +1929,7 @@ def main(page: Page):
             update_status_text.value = f"{base_text} - {update_check_status_message}"
             update_action_button.visible = False
         elif update_available:
-            update_status_icon.name = ft.icons.NEW_RELEASES
+            update_status_icon.name = ft.Icons.NEW_RELEASES
             update_status_icon.color = obter_cor_do_tema_ativo("update_icon_color_available")
             update_status_icon.tooltip = f"Nova versão {latest_version_tag} disponível!"
             update_status_text.value = f"Atualização: v{APP_CURRENT_VERSION} -> {latest_version_tag}"

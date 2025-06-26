@@ -392,13 +392,14 @@ def close_dialog(e, page_ref: ft.Page, dialog_ref: ft.AlertDialog):
 def perform_update_action(e, page_ref: ft.Page, dialog_ref: ft.AlertDialog):
     global update_check_status_message
 
-    if not dialog_ref: # Adicionada verificação
+    if not dialog_ref:
         return
 
+    update_dialog_content_text.value = "Iniciando atualização..."
     dialog_ref.content = Column([
         update_dialog_content_text,
         Container(height=10),
-        Row([update_progress_indicator, Text("Atualizando...")], alignment=MainAxisAlignment.CENTER)
+        Row([update_progress_indicator, Text("Processando...")], alignment=MainAxisAlignment.CENTER)
     ])
     update_progress_indicator.visible = True
     dialog_ref.actions = [] # Remover botões durante o processo
@@ -406,41 +407,96 @@ def perform_update_action(e, page_ref: ft.Page, dialog_ref: ft.AlertDialog):
 
     try:
         if not os.path.exists(".git"):
-            update_dialog_content_text.value = "Erro: Não é um repositório git. A atualização automática não pode prosseguir."
-            update_progress_indicator.visible = False
-            dialog_ref.actions = [ft.TextButton("OK", on_click=lambda ev: close_dialog(ev, page_ref, dialog_ref))]
-            if page_ref: page_ref.update()
-            return
+            update_dialog_content_text.value = "ERRO: Este aplicativo não parece ser um repositório Git. A atualização automática não pode prosseguir."
+            raise Exception("Não é um repositório Git.")
 
-        subprocess.run(['git', 'stash', 'push', '-u', '-m', 'autostash_before_update'], check=True, capture_output=True)
-        print("Git stash push executado.")
+        update_dialog_content_text.value = "Salvando alterações locais (stash)..."
+        if page_ref: page_ref.update()
+        stash_result = subprocess.run(['git', 'stash', 'push', '-u', '-m', 'autostash_before_update'], capture_output=True, text=True)
+        if stash_result.returncode != 0 and "No local changes to save" not in stash_result.stdout and "No local changes to save" not in stash_result.stderr:
+            # Se houve um erro real no stash (não apenas "nada para salvar")
+            print(f"Erro no git stash: {stash_result.stderr}")
+            # Não necessariamente um erro fatal, pode prosseguir, mas registrar.
+        print(f"Git stash push executado: {stash_result.stdout or stash_result.stderr}")
 
-        pull_result = subprocess.run(['git', 'pull', '--ff-only'], check=True, capture_output=True, text=True)
+
+        update_dialog_content_text.value = "Buscando atualizações (fetch)..."
+        if page_ref: page_ref.update()
+        fetch_result = subprocess.run(['git', 'fetch'], check=True, capture_output=True, text=True)
+        print(f"Git fetch executado: {fetch_result.stdout}")
+
+        update_dialog_content_text.value = "Aplicando atualizações (pull --ff-only)..."
+        if page_ref: page_ref.update()
+        pull_result = subprocess.run(['git', 'pull', '--ff-only'], capture_output=True, text=True)
+
+        if pull_result.returncode != 0:
+            if "fatal: Not possible to fast-forward, aborting." in pull_result.stderr or \
+               "Your local changes to the following files would be overwritten by merge" in pull_result.stderr:
+                update_dialog_content_text.value = (
+                    "ERRO: Não foi possível aplicar as atualizações automaticamente (fast-forward falhou). "
+                    "Isso pode ser devido a commits locais divergentes. "
+                    "Por favor, atualize manualmente usando 'git pull' no terminal e resolva quaisquer conflitos."
+                )
+            else:
+                update_dialog_content_text.value = f"ERRO ao aplicar atualizações (git pull): {pull_result.stderr or pull_result.stdout}"
+            # Tentar restaurar o stash em caso de falha no pull
+            subprocess.run(['git', 'stash', 'pop'], capture_output=True, text=True) # Melhor esforço
+            raise subprocess.CalledProcessError(pull_result.returncode, pull_result.args, output=pull_result.stdout, stderr=pull_result.stderr)
         print(f"Git pull executado: {pull_result.stdout}")
 
-        subprocess.run(['git', 'stash', 'pop'], capture_output=True)
-        print("Git stash pop tentado.")
+        update_dialog_content_text.value = "Restaurando alterações locais (stash pop)..."
+        if page_ref: page_ref.update()
+        pop_result = subprocess.run(['git', 'stash', 'pop'], capture_output=True, text=True)
+        if pop_result.returncode != 0:
+            # "No stash entries found." não é um erro crítico aqui.
+            # Conflitos durante o pop são o principal problema.
+            if "CONFLICT" in pop_result.stdout or "CONFLICT" in pop_result.stderr:
+                update_dialog_content_text.value = (
+                    "Atualização baixada, mas CONFLITOS ocorreram ao tentar restaurar suas alterações locais. "
+                    "Suas alterações stashed (autostash_before_update) precisam ser resolvidas manualmente. "
+                    "Reinicie o app. Para resolver, use 'git stash apply' e resolva os conflitos."
+                )
+                update_check_status_message = "Conflito no stash pop!"
+            elif "No stash entries found." not in pop_result.stderr and "No stash found." not in pop_result.stdout : # Ignora se não havia stash
+                update_dialog_content_text.value = (
+                    f"Atualização baixada. Aviso ao restaurar stash: {pop_result.stderr or pop_result.stdout}. "
+                    "Pode ser necessário verificar manualmente. Reinicie o app."
+                )
+            else: # Stash pop bem sucedido ou sem stash para aplicar
+                update_dialog_content_text.value = "Atualização concluída com sucesso! Por favor, reinicie o aplicativo para aplicar as alterações."
+                update_check_status_message = "Atualizado! Reinicie."
+        else: # Stash pop bem sucedido
+            update_dialog_content_text.value = "Atualização concluída com sucesso! Por favor, reinicie o aplicativo para aplicar as alterações."
+            update_check_status_message = "Atualizado! Reinicie."
+        print(f"Git stash pop tentado: {pop_result.stdout or pop_result.stderr}")
 
-        update_dialog_content_text.value = "Atualização concluída com sucesso! Por favor, reinicie o aplicativo para aplicar as alterações."
-        update_check_status_message = "Atualizado! Reinicie."
 
     except subprocess.CalledProcessError as err:
-        error_message = f"Erro durante a atualização: {err.stderr or err.stdout or str(err)}"
-        print(error_message)
-        update_dialog_content_text.value = error_message
-        subprocess.run(['git', 'stash', 'pop'], capture_output=True)
+        error_details = f"{err.stderr or err.stdout or str(err)}".strip()
+        # A mensagem já deve ter sido definida pelo bloco do pull
+        if not ("ERRO: Não foi possível aplicar as atualizações" in update_dialog_content_text.value or "ERRO ao aplicar atualizações" in update_dialog_content_text.value) :
+            update_dialog_content_text.value = f"ERRO no processo Git: {error_details}"
+        print(f"Erro subprocess (pré-definido ou genérico): {error_details}")
+        # Tentar garantir que o stash seja restaurado se o erro não foi no pull e o stash foi feito.
+        if 'stash_result' in locals() and stash_result.returncode == 0 and "pull_result" in locals() and err.cmd != pull_result.args :
+             # Se o stash foi bem sucedido e o erro não foi no pull, tentar pop.
+             # Se o erro FOI no pull, o pop já foi tentado lá.
+            subprocess.run(['git', 'stash', 'pop'], capture_output=True, text=True)
 
     except FileNotFoundError:
-        update_dialog_content_text.value = "Erro: Git não encontrado. A atualização não pode prosseguir."
+        update_dialog_content_text.value = "ERRO: Git não encontrado no sistema. A atualização automática não pode prosseguir. Por favor, instale o Git."
     except Exception as ex:
-        update_dialog_content_text.value = f"Erro inesperado: {str(ex)}"
+        # Se a mensagem já foi definida para um erro específico (como "Não é repo git"), não sobrescrever.
+        if "ERRO:" not in update_dialog_content_text.value:
+            update_dialog_content_text.value = f"ERRO inesperado durante a atualização: {str(ex)}"
+        print(f"Erro Exception: {str(ex)}")
 
     update_progress_indicator.visible = False
-    dialog_ref.actions = [ft.TextButton("OK, Reiniciar Manualmente", on_click=lambda ev: close_dialog(ev, page_ref, dialog_ref))]
+    dialog_ref.actions = [ft.TextButton("OK, Entendido", on_click=lambda ev: close_dialog(ev, page_ref, dialog_ref))]
     if page_ref: page_ref.update()
 
 
-def show_update_dialog(page_ref: ft.Page): # page_ref pode ser None se chamado antes da página estar pronta
+def show_update_dialog(page_ref: ft.Page):
     global update_dialog # Acessa o update_dialog global
     if not page_ref or not update_dialog: # Adicionada verificação para page_ref e update_dialog
         print("Página ou diálogo de atualização não pronto para show_update_dialog")
@@ -540,18 +596,18 @@ TEMAS = {
         "botao_opcao_quiz_texto": ft.Colors.WHITE,
         "botao_destaque_bg": ft.Colors.TEAL_ACCENT_400,
         "botao_destaque_texto": ft.Colors.WHITE,
-        "botao_tema_bg": ft.colors.with_opacity(0.2, ft.Colors.WHITE), # For theme selection buttons
+        "botao_tema_bg": ft.Colors.with_opacity(0.2, ft.Colors.WHITE), # For theme selection buttons
         "botao_tema_texto": ft.Colors.CYAN_ACCENT_100,                 # For theme selection buttons text
         "feedback_acerto_texto": ft.Colors.GREEN_ACCENT_200,
         "feedback_erro_texto": ft.Colors.RED_ACCENT_100,
-        "feedback_acerto_botao_bg": ft.colors.with_opacity(0.3, ft.Colors.GREEN_ACCENT_100),
-        "feedback_erro_botao_bg": ft.colors.with_opacity(0.3, ft.Colors.RED_ACCENT_100),
-        "container_treino_bg": ft.colors.with_opacity(0.1, ft.Colors.WHITE), # Slightly more subtle frosted glass
+        "feedback_acerto_botao_bg": ft.Colors.with_opacity(0.3, ft.Colors.GREEN_ACCENT_100),
+        "feedback_erro_botao_bg": ft.Colors.with_opacity(0.3, ft.Colors.RED_ACCENT_100),
+        "container_treino_bg": ft.Colors.with_opacity(0.1, ft.Colors.WHITE), # Slightly more subtle frosted glass
         "container_treino_borda": ft.Colors.CYAN_ACCENT_700,
         "textfield_border_color": ft.Colors.CYAN_ACCENT_700,
         "dropdown_border_color": ft.Colors.CYAN_ACCENT_700,
         "progressbar_cor": ft.Colors.CYAN_ACCENT_400,
-        "progressbar_bg_cor": ft.colors.with_opacity(0.2, ft.Colors.WHITE),
+        "progressbar_bg_cor": ft.Colors.with_opacity(0.2, ft.Colors.WHITE),
         "update_icon_color_available": ft.Colors.YELLOW_ACCENT_400,
         "update_icon_color_uptodate": ft.Colors.GREEN_ACCENT_400,
         "update_icon_color_error": ft.Colors.RED_ACCENT_400

@@ -82,24 +82,52 @@ FORMULAS_NOTAVEIS = [
         }
     },
     {
-        'id': "divisao_diretamente_proporcional",
-        'display_name': "Divisão Diretamente Proporcional",
-        'variables': ['V', 'g_A', 'g_B'], # Exemplo com 2 grandezas, generalizar na UI
-        'calculation_function': lambda **kwargs: calc_divisao_diretamente_proporcional(kwargs['V'], [("A", kwargs['g_A']), ("B", kwargs['g_B'])])['A'], # Adaptar para quiz
-        'question_template': "Divida V={V} diretamente proporcional a g_A={g_A} e g_B={g_B}. Qual a parte de A?",
-        'reminder_template': "P_i = g_i * K, onde K = V / (g_1 + g_2 + ... + g_n)",
-        'range_constraints': {'V': {'min': 10, 'max':1000}, 'g_A': {'min':1, 'max':20}, 'g_B': {'min':1, 'max':20}}, # Ranges para o quiz
-        'variable_labels': {'V': "Valor Total (V)", 'g_A': "Grandeza A", 'g_B': "Grandeza B"}
+        'id': "grandezas_diretamente_proporcionais",
+        'display_name': "Grandezas Diretamente Proporcionais",
+        'variables': ['valor_total', 'nome_irmao1', 'idade_irmao1', 'nome_irmao2', 'idade_irmao2'],
+        'calculation_function': lambda **kwargs: int(round(calc_divisao_diretamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']])),
+        'question_template': "Maria precisa dividir R${valor_total} entre seus filhos, {nome_irmao1} de {idade_irmao1} anos e {nome_irmao2} de {idade_irmao2} anos, em partes diretamente proporcionais às suas idades. Quanto {nome_irmao1} receberá? E {nome_irmao2}?",
+        'reminder_template': "Parte = (Idade / Soma das Idades) * Valor Total. O resultado é arredondado para o inteiro mais próximo.",
+        'range_constraints': {
+            'valor_total': {'min': 20, 'max': 1000},
+            'idade_irmao1': {'min': 1, 'max': 10},
+            'idade_irmao2': {'min': 1, 'max': 10, 'not_equal_to_var': 'idade_irmao1'} # Para garantir idades diferentes e evitar divisão trivialmente igual
+        },
+        'variable_labels': {
+            'valor_total': "Valor Total (R$)",
+            'nome_irmao1': "Nome Irmão(ã) 1", # Será preenchido aleatoriamente
+            'idade_irmao1': "Idade Irmão(ã) 1 (1-10)",
+            'nome_irmao2': "Nome Irmão(ã) 2", # Será preenchido aleatoriamente
+            'idade_irmao2': "Idade Irmão(ã) 2 (1-10, ≠ Idade 1)"
+        },
+        'custom_variable_generators': {
+            'nome_irmao1': lambda: random.choice(["Ana", "João", "Sofia"]),
+            'nome_irmao2': lambda: random.choice(["Lucas", "Clara", "Pedro"])
+        }
     },
     {
-        'id': "divisao_inversamente_proporcional",
-        'display_name': "Divisão Inversamente Proporcional",
-        'variables': ['V', 'g_A', 'g_B'], # Exemplo com 2 grandezas
-        'calculation_function': lambda **kwargs: calc_divisao_inversamente_proporcional(kwargs['V'], [("A", kwargs['g_A']), ("B", kwargs['g_B'])])['A'], # Adaptar para quiz
-        'question_template': "Divida V={V} inversamente proporcional a g_A={g_A} e g_B={g_B}. Qual a parte de A?",
-        'reminder_template': "P_i = K / g_i, onde K = V / (1/g_1 + 1/g_2 + ... + 1/g_n)",
-        'range_constraints': {'V': {'min': 10, 'max':1000}, 'g_A': {'min':1, 'max':20}, 'g_B': {'min':1, 'max':20, 'not_equal_to_g_A': True}}, # g_A != g_B para evitar partes iguais trivialmente
-        'variable_labels': {'V': "Valor Total (V)", 'g_A': "Grandeza A (≠0)", 'g_B': "Grandeza B (≠0, ≠g_A)"}
+        'id': "grandezas_inversamente_proporcionais",
+        'display_name': "Grandezas Inversamente Proporcionais",
+        'variables': ['valor_total', 'nome_irmao1', 'idade_irmao1', 'nome_irmao2', 'idade_irmao2'],
+        'calculation_function': lambda **kwargs: int(round(calc_divisao_inversamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']])),
+        'question_template': "Carlos quer dividir R${valor_total} entre seu filho {nome_irmao1} de {idade_irmao1} anos e sua filha {nome_irmao2} de {idade_irmao2} anos, em partes inversamente proporcionais às suas idades. Quanto {nome_irmao1} receberá? E {nome_irmao2}?",
+        'reminder_template': "Parte = (Inverso da Idade / Soma dos Inversos das Idades) * Valor Total. O resultado é arredondado para o inteiro mais próximo.",
+        'range_constraints': {
+            'valor_total': {'min': 20, 'max': 1000},
+            'idade_irmao1': {'min': 1, 'max': 10}, # Idade não pode ser 0 para inversamente
+            'idade_irmao2': {'min': 1, 'max': 10, 'not_equal_to_var': 'idade_irmao1'} # Idade não pode ser 0 e diferente da outra
+        },
+        'variable_labels': {
+            'valor_total': "Valor Total (R$)",
+            'nome_irmao1': "Nome Filho(a) 1",
+            'idade_irmao1': "Idade Filho(a) 1 (1-10)",
+            'nome_irmao2': "Nome Filho(a) 2",
+            'idade_irmao2': "Idade Filho(a) 2 (1-10, ≠ Idade 1)"
+        },
+        'custom_variable_generators': {
+            'nome_irmao1': lambda: random.choice(["Bia", "Davi", "Laura"]),
+            'nome_irmao2': lambda: random.choice(["Enzo", "Alice", "Miguel"])
+        }
     },
 ]
 
@@ -123,12 +151,12 @@ def calc_divisao_diretamente_proporcional(valor_total: float, grandezas: list[tu
     """
     soma_grandezas = sum(g[1] for g in grandezas)
     if soma_grandezas == 0:
-        return {item[0]: 0.0 for item in grandezas} # Evita divisão por zero e retorna 0 para todos
+        return {item[0]: 0 for item in grandezas} # Evita divisão por zero e retorna 0 para todos
 
     k = valor_total / soma_grandezas
     resultado = {}
     for nome, grandeza_valor in grandezas:
-        resultado[nome] = grandeza_valor * k
+        resultado[nome] = int(round(grandeza_valor * k)) # Arredonda e converte para int
     return resultado
 
 def calc_divisao_inversamente_proporcional(valor_total: float, grandezas: list[tuple[str, float]]) -> dict[str, float]:
@@ -147,16 +175,16 @@ def calc_divisao_inversamente_proporcional(valor_total: float, grandezas: list[t
     for nome, grandeza_valor in grandezas:
         if grandeza_valor == 0:
             # Divisão por zero não é permitida para uma grandeza individual
-            return {item[0]: 0.0 for item in grandezas} # Ou poderia lançar um erro
+            return {item[0]: 0 for item in grandezas} # Ou poderia lançar um erro
         soma_inversos_grandezas += 1 / grandeza_valor
 
-    if soma_inversos_grandezas == 0:
-        return {item[0]: 0.0 for item in grandezas} # Evita divisão por zero
+    if soma_inversos_grandezas == 0: # Extremamente improvável com idades > 0
+        return {item[0]: 0 for item in grandezas} # Evita divisão por zero
 
     k = valor_total / soma_inversos_grandezas
     resultado = {}
     for nome, grandeza_valor in grandezas:
-        resultado[nome] = k / grandeza_valor
+        resultado[nome] = int(round(k / grandeza_valor)) # Arredonda e converte para int
     return resultado
 
 # --- Fim das Definições das Fórmulas Notáveis ---
@@ -916,27 +944,27 @@ def build_tela_formula_quiz_setup(page: Page):
             start_quiz_button,
             Container(height=10),
             feedback_text,
-            Container(height=20, border=ft.border.only(bottom=ft.BorderSide(1, obter_cor_do_tema_ativo("texto_padrao"))), margin=ft.margin.symmetric(vertical=10)),
-            Text("3. Ferramentas de Cálculo Adicionais:", size=18, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao")),
-            Container(height=10),
-            ElevatedButton(
-                "Calculadora de Divisão Diretamente Proporcional",
-                on_click=lambda _: page.go("/divisao_direta"),
-                width=BOTAO_LARGURA_PRINCIPAL + 60, # Um pouco mais largo para o texto
-                height=BOTAO_ALTURA_PRINCIPAL,
-                bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"),
-                color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
-            ),
-            Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
-            ElevatedButton(
-                "Calculadora de Divisão Inversamente Proporcional",
-                on_click=lambda _: page.go("/divisao_inversa"),
-                width=BOTAO_LARGURA_PRINCIPAL + 60, # Um pouco mais largo para o texto
-                height=BOTAO_ALTURA_PRINCIPAL,
-                bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"),
-                color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
-            ),
-            Container(height=20),
+            # Container(height=20, border=ft.border.only(bottom=ft.BorderSide(1, obter_cor_do_tema_ativo("texto_padrao"))), margin=ft.margin.symmetric(vertical=10)), # Linha divisória removida
+            # Text("3. Ferramentas de Cálculo Adicionais:", size=18, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao")), # Removido
+            # Container(height=10), # Removido
+            # ElevatedButton( # Removido
+            #     "Calculadora de Divisão Diretamente Proporcional",
+            #     on_click=lambda _: page.go("/divisao_direta"),
+            #     width=BOTAO_LARGURA_PRINCIPAL + 60,
+            #     height=BOTAO_ALTURA_PRINCIPAL,
+            #     bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"),
+            #     color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
+            # ),
+            # Container(height=ESPACAMENTO_BOTOES_APRESENTACAO), # Removido
+            # ElevatedButton( # Removido
+            #     "Calculadora de Divisão Inversamente Proporcional",
+            #     on_click=lambda _: page.go("/divisao_inversa"),
+            #     width=BOTAO_LARGURA_PRINCIPAL + 60,
+            #     height=BOTAO_ALTURA_PRINCIPAL,
+            #     bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"),
+            #     color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
+            # ),
+            Container(height=20), # Espaçamento antes do botão Voltar
             back_button,
         ],
         scroll=ScrollMode.AUTO,
@@ -1294,16 +1322,25 @@ def build_tela_custom_quiz(page: Page):
 
         # Primeiro, processa todas as variáveis individualmente com seus ranges
         for var_name in variables_defs:
+            # Se houver um gerador customizado, usa ele
+            custom_generator = formula_definition.get('custom_variable_generators', {}).get(var_name)
+            if custom_generator:
+                local_vars_values[var_name] = custom_generator()
+                continue # Pula o processamento de range normal para esta variável
+
             user_range_for_var = user_ranges.get(var_name, {})
             formula_constraints_for_var = range_constraints.get(var_name, {})
 
-            # Determina o min e max para esta variável
-            # Prioridade: user_range > formula_constraint > default (1-10 ou específico da var)
             default_min_val = 1
             default_max_val = 10
-            if var_name == 'V': # Exemplo de default específico para 'V'
-                default_min_val = 10
+            # Ajustar defaults específicos se necessário (ex: valor_total)
+            if var_name == 'valor_total':
+                default_min_val = 20
                 default_max_val = 1000
+            elif 'idade' in var_name: # Para 'idade_irmao1', 'idade_irmao2'
+                default_min_val = 1
+                default_max_val = 10
+
 
             min_val = user_range_for_var.get('min', formula_constraints_for_var.get('min', default_min_val))
             max_val = user_range_for_var.get('max', formula_constraints_for_var.get('max', default_max_val))
@@ -1312,79 +1349,33 @@ def build_tela_custom_quiz(page: Page):
                 print(f"Aviso: Range inválido para '{var_name}' (min: {min_val} > max: {max_val}) na fórmula {formula_id}. Forçando min = max.")
                 min_val = max_val
 
-            local_vars_values[var_name] = random.randint(min_val, max_val)
-
-        # Depois, ajusta variáveis com dependências, como 'b' dependendo de 'a'
-        if 'a' in local_vars_values and 'b' in local_vars_values:
-            val_a = local_vars_values['a'] # Valor de 'a' já sorteado
-
-            user_range_for_b = user_ranges.get('b', {})
-            formula_constraints_for_b = range_constraints.get('b', {})
-
-            # Recalcula min/max para 'b' com base em 'a' se houver constraints
-            min_b = user_range_for_b.get('min', formula_constraints_for_b.get('min', 1))
-            max_b = user_range_for_b.get('max', formula_constraints_for_b.get('max', 10))
-
-            less_than_a = formula_constraints_for_b.get('less_than_a', False)
-            less_than_equal_a = formula_constraints_for_b.get('less_than_equal_a', False)
-
-            if less_than_a:
-                max_b = min(max_b, val_a - 1)
-            elif less_than_equal_a: # Note: 'less_than_equal_a' é string na definição original, aqui é bool
-                max_b = min(max_b, val_a)
-
-            # Ajuste para 'not_equal_to_g_A' (para g_B, se g_A é 'a' hipoteticamente)
-            # Esta parte é mais específica para g_A/g_B e foi tratada um pouco no loop anterior.
-            # Se 'b' tivesse uma constraint 'not_equal_to_a', seria aqui.
-
-            if min_b > max_b:
-                if less_than_a and val_a == 1: # Caso especial: b < a e a=1
-                    # Tentativa de ajuste: se 'a' pode ser aumentado para permitir 'b'
-                    # Isso complica, pois 'a' já foi usado. Idealmente, sortear 'a' primeiro com folga.
-                    # Por ora, se o range de 'b' se tornar inválido, pode levar a erro ou comportamento inesperado.
-                    # Vamos forçar min_b = max_b para evitar erro no randint, mas isso pode não ser o ideal.
-                    print(f"Aviso: Range para 'b' tornou-se inválido (min: {min_b} > max: {max_b}) devido à constraint com a={val_a} na fórmula {formula_id}. Forçando min_b = max_b.")
-                    min_b = max_b
-                else:
-                     print(f"Aviso: Range para 'b' é inválido (min: {min_b} > max: {max_b}) na fórmula {formula_id}. Forçando min_b = max_b.")
-                     min_b = max_b
-
-            if min_b <= max_b : # Só resorteia 'b' se o range for válido
-                 local_vars_values['b'] = random.randint(min_b, max_b)
+            # Tratamento para constraint 'not_equal_to_var'
+            # Ex: idade_irmao2 não pode ser igual a idade_irmao1
+            not_equal_to_var_name = formula_constraints_for_var.get('not_equal_to_var')
+            if not_equal_to_var_name and not_equal_to_var_name in local_vars_values:
+                forbidden_value = local_vars_values[not_equal_to_var_name]
+                # Tenta gerar um valor diferente
+                attempts = 0
+                while attempts < 20: # Limita tentativas para evitar loop infinito
+                    val_candidate = random.randint(min_val, max_val)
+                    if val_candidate != forbidden_value:
+                        local_vars_values[var_name] = val_candidate
+                        break
+                    attempts += 1
+                else: # Se não conseguiu gerar um valor diferente
+                    print(f"Aviso: Não foi possível gerar valor para '{var_name}' diferente de '{not_equal_to_var_name}' ({forbidden_value}) dentro do range [{min_val}-{max_val}]. Usando valor potencialmente igual.")
+                    local_vars_values[var_name] = random.randint(min_val, max_val) # Sorteia mesmo assim, pode ser igual
             else:
-                 # Se o range ainda for inválido (ex: max_b ficou < 0 e min_b é 1)
-                 # Isso indica um problema de configuração de constraint vs range.
-                 # Usar o valor já sorteado para 'b' ou um fallback.
-                 # Para simplificar, vamos manter o valor de 'b' sorteado no primeiro loop se o range ajustado for inválido.
-                 print(f"Aviso: Não foi possível re-sortear 'b' com constraints dependentes de 'a' válidas para fórmula {formula_id}. Usando valor inicial de 'b'.")
+                 local_vars_values[var_name] = random.randint(min_val, max_val)
 
 
-        # Ajuste para g_B dependendo de g_A (not_equal_to_g_A)
-        if 'g_A' in local_vars_values and 'g_B' in local_vars_values:
-            val_g_A = local_vars_values['g_A']
-            formula_constraints_for_g_B = range_constraints.get('g_B', {})
-            if formula_constraints_for_g_B.get('not_equal_to_g_A'):
-                user_range_for_g_B = user_ranges.get('g_B', {})
-                min_g_B = user_range_for_g_B.get('min', formula_constraints_for_g_B.get('min', 1))
-                max_g_B = user_range_for_g_B.get('max', formula_constraints_for_g_B.get('max', 20)) # Default para g_B
-
-                if min_g_B > max_g_B: min_g_B = max_g_B # Sanity
-
-                current_g_B = local_vars_values['g_B']
-                if current_g_B == val_g_A: # Precisa resortear g_B
-                    attempts = 0
-                    while attempts < 20: # Tentar algumas vezes
-                        new_g_B = random.randint(min_g_B, max_g_B)
-                        if new_g_B != val_g_A:
-                            local_vars_values['g_B'] = new_g_B
-                            break
-                        attempts += 1
-                    else:
-                        print(f"Aviso: Não foi possível sortear g_B ({min_g_B}-{max_g_B}) diferente de g_A ({val_g_A}) para {formula_id}.")
-                        # Se falhar, g_B pode ser igual a g_A, o que pode ser ok ou não dependendo da fórmula.
+        # Ajustes de dependência (ex: 'b' dependendo de 'a') já foram parcialmente cobertos
+        # pela ordem de processamento e pela constraint 'not_equal_to_var'.
+        # Se houver constraints mais complexas (ex: b < a), elas precisariam de uma segunda passada.
+        # Por ora, as constraints atuais são mais simples.
 
         # Validação final e chamada da função de cálculo
-        missing_keys = [key for key in variables_defs if key not in local_vars_values]
+        missing_keys = [key for key in variables_defs if key not in local_vars_values and not formula_definition.get('custom_variable_generators', {}).get(key)]
         if missing_keys:
             print(f"Erro Crítico: Chaves ausentes em local_vars_values para {formula_id} antes do cálculo: {missing_keys}. Valores atuais: {local_vars_values}")
             return None
@@ -1400,47 +1391,90 @@ def build_tela_custom_quiz(page: Page):
 
         full_question_text = question_template.format(**local_vars_values)
 
-        options_set = {correct_answer}
+        # Para as fórmulas de grandezas, a `calculation_function` retorna a parte do primeiro irmão.
+        # A `correct_answer` é um inteiro.
+        # O `question_template` pergunta sobre ambos, mas o quiz foca no primeiro.
+        # As opções devem ser números inteiros.
+
+        options_set = {int(round(correct_answer))} # Garante que a resposta correta seja int e esteja nas opções
         attempts = 0
-        is_correct_answer_int = isinstance(correct_answer, int)
+
+        # Gerar opções incorretas
+        # Tentar gerar opções que sejam +/- alguns reais ou uma pequena porcentagem da resposta correta
+        possible_offsets = [-10, -5, -2, -1, 1, 2, 5, 10] # Offsets em Reais
+        if abs(correct_answer) > 50:
+            possible_offsets.extend([int(round(correct_answer * 0.1)), int(round(correct_answer * -0.1))])
+            possible_offsets.extend([int(round(correct_answer * 0.05)), int(round(correct_answer * -0.05))])
+
+        # Remover duplicatas e o offset 0 caso exista
+        possible_offsets = sorted(list(set(o for o in possible_offsets if o != 0)))
+
 
         while len(options_set) < 4 and attempts < 50:
-            offset_val = random.choice([-3, -2, -1, 1, 2, 3, 5, -5])
-            if abs(correct_answer) > 20:
-                prop_offset_candidate = round(correct_answer * random.choice([0.1, -0.1, 0.2, -0.2]))
-                if prop_offset_candidate == 0: prop_offset_candidate = random.choice([-1,1])
-                offset_val = random.choice([offset_val, int(prop_offset_candidate)])
-            new_opt = correct_answer + offset_val
-            if is_correct_answer_int: new_opt = int(round(new_opt))
-            if new_opt not in options_set: options_set.add(new_opt)
+            offset_val = random.choice(possible_offsets)
+            new_opt_candidate = correct_answer + offset_val
+            new_opt = int(round(new_opt_candidate))
+
+            if new_opt >= 0 and new_opt not in options_set: # Evitar valores negativos se não fizerem sentido
+                options_set.add(new_opt)
             attempts += 1
 
-        idx = 1
+        # Fallback se não conseguir gerar 4 opções distintas com offsets
+        idx_fallback = 1
+        while len(options_set) < 4 and idx_fallback < 20: # Limita para evitar loop infinito
+            # Tenta adicionar valores próximos à resposta correta, mas não muito distantes
+            alt_opt_positive = int(round(correct_answer + idx_fallback * (random.randint(1,3))))
+            alt_opt_negative = int(round(correct_answer - idx_fallback * (random.randint(1,3))))
+
+            if alt_opt_positive >= 0 and alt_opt_positive not in options_set:
+                options_set.add(alt_opt_positive)
+            if len(options_set) < 4 and alt_opt_negative >=0 and alt_opt_negative not in options_set:
+                 options_set.add(alt_opt_negative)
+            idx_fallback += 1
+
+        # Garantir 4 opções, adicionando aleatórios se necessário
+        # (mas garante que sejam inteiros e não negativos)
+        idx_random_fill = 1
         while len(options_set) < 4:
-            alt_opt = correct_answer + (idx * random.choice([-1,1]))
-            if is_correct_answer_int: alt_opt = int(round(alt_opt))
-            if alt_opt not in options_set : options_set.add(alt_opt)
-            idx +=1
-            if idx > 20 : break
+            # Gera um número aleatório em uma faixa plausível (ex: 0 a valor_total)
+            # ou próximo à resposta correta
+            max_random_val = local_vars_values.get('valor_total', correct_answer + 50)
+            min_random_val = 0
+            if max_random_val < min_random_val : max_random_val = min_random_val + 10 # Sanity check
+
+            random_fill_opt = random.randint(min_random_val, int(round(max_random_val)))
+            if random_fill_opt not in options_set:
+                options_set.add(random_fill_opt)
+            else: # Tenta um offset simples se o aleatório já existir
+                random_fill_opt = correct_answer + idx_random_fill * 11
+                if random_fill_opt >=0 and random_fill_opt not in options_set: options_set.add(int(round(random_fill_opt)))
+            idx_random_fill +=1
+            if idx_random_fill > 20: break # Evita loop infinito
+
 
         final_options = list(options_set)
-        idx = 1
-        base_fill_val = correct_answer if isinstance(correct_answer, (int, float)) else 1
-        while len(final_options) < 4:
-            fill_opt = base_fill_val + idx * 10 + random.randint(0,5)
-            if is_correct_answer_int: fill_opt = int(round(fill_opt))
-            if fill_opt not in final_options: final_options.append(fill_opt)
-            else: final_options.append(base_fill_val - idx * 10 - random.randint(0,5))
-            idx +=1
-            if idx > 10: break
-
         random.shuffle(final_options)
 
+        # A pergunta do quiz focará na parte do primeiro irmão, conforme decisão no plano.
+        # Ex: "Quanto {nome_irmao1} receberá?"
+        # Se a full_question_text já está assim, ótimo. Se não, precisaria ajustar aqui
+        # ou garantir que o question_template na FORMULAS_NOTAVEIS esteja adaptado.
+        # O question_template atual já pede ambos, mas a resposta é só do primeiro.
+        # Poderíamos modificar dinamicamente a `full_question_text` aqui para focar no primeiro.
+        # Exemplo:
+        if formula_id.startswith("grandezas_"):
+            nome1 = local_vars_values.get('nome_irmao1', 'o primeiro')
+            full_question_text_quiz = f"Do valor de R${local_vars_values.get('valor_total', 'total')}, {local_vars_values.get('nome_irmao1','Pessoa1')} ({local_vars_values.get('idade_irmao1','X')} anos) e {local_vars_values.get('nome_irmao2','Pessoa2')} ({local_vars_values.get('idade_irmao2','Y')} anos) dividirão em partes {'diretamente' if 'diretamente' in formula_id else 'inversamente'} proporcionais às suas idades. Quanto {nome1} receberá?"
+        else:
+            full_question_text_quiz = full_question_text
+
+
         return {
-            'full_question': full_question_text,
+            'full_question': full_question_text_quiz, # Usar a pergunta focada para o quiz
             'options': final_options[:4],
-            'correct_answer': correct_answer,
-            'reminder_template': reminder_template
+            'correct_answer': int(round(correct_answer)), # Garantir que a resposta correta seja int
+            'reminder_template': reminder_template,
+            'original_question_template_for_display': full_question_text # Manter o template original para exibição se necessário
         }
 
     botao_proxima = ElevatedButton("Próxima Pergunta", on_click=None, visible=False, width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
@@ -1479,9 +1513,23 @@ def build_tela_custom_quiz(page: Page):
         for btn in todos_botoes_opcoes_ref: btn.disabled = True
         txt_feedback_ctrl_ref.opacity = 1; txt_feedback_ctrl_ref.scale = 1
 
-        if reminder_text:
-            txt_lembrete_ctrl_ref.value = f"Lembrete: {reminder_text}"
+        # Exibe o lembrete que pode ser a pergunta original mais completa
+        original_question_template = question_data_ref.get('original_question_template_for_display')
+        actual_reminder = question_data_ref.get('reminder_template', "")
+
+        if formula_config_ref.get('formula_id',"").startswith("grandezas_") and original_question_template:
+             # Para grandezas, o "lembrete" principal é a pergunta completa sobre ambos os irmãos
+            txt_lembrete_ctrl_ref.value = f"Detalhe: {original_question_template}\nLembrete Fórmula: {actual_reminder}"
+        elif actual_reminder:
+            txt_lembrete_ctrl_ref.value = f"Lembrete: {actual_reminder}"
+        else:
+            txt_lembrete_ctrl_ref.value = "" # Limpa se não houver lembrete
+
+        if txt_lembrete_ctrl_ref.value:
             txt_lembrete_ctrl_ref.opacity = 1
+        else:
+            txt_lembrete_ctrl_ref.opacity = 0
+
 
         btn_proxima_ctrl_ref.visible = True; page.update()
 
@@ -1505,14 +1553,16 @@ def build_tela_custom_quiz(page: Page):
         question_data_storage.clear()
         question_data_storage.update(question_data)
 
+        # 'full_question' já está adaptada para o quiz (focando no primeiro irmão para grandezas)
         txt_pergunta_ctrl.value = question_data['full_question']
 
         for i in range(4):
             if i < len(question_data['options']):
                 op_val = question_data['options'][i]
-                btn_opcoes_ctrls[i].text = str(op_val)
-                btn_opcoes_ctrls[i].data = {'option': op_val}
-                btn_opcoes_ctrls[i].on_click = lambda e, btn=btn_opcoes_ctrls[i]: handle_custom_answer(e, btn, btn_opcoes_ctrls, txt_feedback_ctrl, txt_lembrete_ctrl, btn_proxima_ctrl, question_data_storage)
+                # Para grandezas, as opções são valores inteiros (Reais)
+                btn_opcoes_ctrls[i].text = f"R$ {op_val}" if formula_config_ref.get('formula_id',"").startswith("grandezas_") else str(op_val)
+                btn_opcoes_ctrls[i].data = {'option': op_val} # op_val já é int
+                btn_opcoes_ctrls[i].on_click = lambda e, btn=btn_opcoes_ctrls[i]: handle_custom_answer(e, btn, btn_opcoes_ctrls, txt_feedback_ctrl, txt_lembrete_ctrl, btn_proxima_ctrl, question_data_storage, formula_config_ref)
                 btn_opcoes_ctrls[i].bgcolor = obter_cor_do_tema_ativo("botao_opcao_quiz_bg")
                 btn_opcoes_ctrls[i].color = obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
                 btn_opcoes_ctrls[i].disabled = False; btn_opcoes_ctrls[i].visible = True

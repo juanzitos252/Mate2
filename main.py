@@ -62,7 +62,7 @@ FORMULAS_NOTAVEIS = [
         'calculation_function': calc_produto_soma_diferenca,
         'question_template': "Se a={a} e b={b}, qual o valor de (a+b)(a-b)?",
         'reminder_template': "(x+y)(x-y) = x^2 - y^2",
-        'range_constraints': {'b': 'less_than_equal_a'},
+        'range_constraints': {'b': {'less_than_equal_a': True}},
         'variable_labels': {'a': "Valor de 'a'", 'b': "Valor de 'b' (b <= a)"}
     },
     {
@@ -85,7 +85,7 @@ FORMULAS_NOTAVEIS = [
         'id': "divisao_diretamente_proporcional",
         'display_name': "Divisão Diretamente Proporcional",
         'variables': ['V', 'g_A', 'g_B'], # Exemplo com 2 grandezas, generalizar na UI
-        'calculation_function': lambda V, g_A, g_B: calc_divisao_diretamente_proporcional(V, [("A", g_A), ("B", g_B)]), # Adaptar para quiz
+        'calculation_function': lambda **kwargs: calc_divisao_diretamente_proporcional(kwargs['V'], [("A", kwargs['g_A']), ("B", kwargs['g_B'])])['A'], # Adaptar para quiz
         'question_template': "Divida V={V} diretamente proporcional a g_A={g_A} e g_B={g_B}. Qual a parte de A?",
         'reminder_template': "P_i = g_i * K, onde K = V / (g_1 + g_2 + ... + g_n)",
         'range_constraints': {'V': {'min': 10, 'max':1000}, 'g_A': {'min':1, 'max':20}, 'g_B': {'min':1, 'max':20}}, # Ranges para o quiz
@@ -95,7 +95,7 @@ FORMULAS_NOTAVEIS = [
         'id': "divisao_inversamente_proporcional",
         'display_name': "Divisão Inversamente Proporcional",
         'variables': ['V', 'g_A', 'g_B'], # Exemplo com 2 grandezas
-        'calculation_function': lambda V, g_A, g_B: calc_divisao_inversamente_proporcional(V, [("A", g_A), ("B", g_B)]), # Adaptar para quiz
+        'calculation_function': lambda **kwargs: calc_divisao_inversamente_proporcional(kwargs['V'], [("A", kwargs['g_A']), ("B", kwargs['g_B'])])['A'], # Adaptar para quiz
         'question_template': "Divida V={V} inversamente proporcional a g_A={g_A} e g_B={g_B}. Qual a parte de A?",
         'reminder_template': "P_i = K / g_i, onde K = V / (1/g_1 + 1/g_2 + ... + 1/g_n)",
         'range_constraints': {'V': {'min': 10, 'max':1000}, 'g_A': {'min':1, 'max':20}, 'g_B': {'min':1, 'max':20, 'not_equal_to_g_A': True}}, # g_A != g_B para evitar partes iguais trivialmente
@@ -988,10 +988,6 @@ def build_tela_apresentacao(page: Page):
             ElevatedButton("Estatísticas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/estatisticas"), tooltip="Veja seu progresso.", bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"), color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")),
             Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
             ElevatedButton("Quiz com Fórmulas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/formula_quiz_setup"), tooltip="Crie ou selecione um quiz baseado em fórmulas notáveis ou acesse calculadoras.", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")),
-            # Container(height=ESPACAMENTO_BOTOES_APRESENTACAO), # Removido
-            # ElevatedButton("Divisão Diretamente Proporcional", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/divisao_direta"), tooltip="Calcular divisão diretamente proporcional.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")), # Removido
-            # Container(height=ESPACAMENTO_BOTOES_APRESENTACAO), # Removido
-            # ElevatedButton("Divisão Inversamente Proporcional", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/divisao_inversa"), tooltip="Calcular divisão inversamente proporcional.", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")), # Removido
             Container(height=20, margin=ft.margin.only(top=10)), # Mantido para espaçamento antes dos botões de tema
         ] + controles_botoes_tema + [
             Container(height=10), # Mantido para espaçamento antes do botão de atualização
@@ -1020,7 +1016,7 @@ def build_tela_apresentacao(page: Page):
 
 def build_tela_quiz(page: Page):
     texto_pergunta = Text(size=30, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
-    botoes_opcoes = [ElevatedButton(width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
+    botoes_opcoes = [ElevatedButton(text="", width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
     texto_feedback = Text(size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA)
     def handle_resposta(e, botao_clicado_ref, todos_botoes_opcoes_ref, txt_feedback_ctrl_ref, btn_proxima_ctrl_ref):
         dados_botao = botao_clicado_ref.data
@@ -1080,7 +1076,7 @@ def build_tela_quiz(page: Page):
 
 def build_tela_quiz_invertido(page: Page):
     texto_pergunta_invertida = Text(size=30, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
-    botoes_opcoes_invertidas = [ElevatedButton(width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
+    botoes_opcoes_invertidas = [ElevatedButton(text="", width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
     texto_feedback_invertido = Text(size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA)
     def handle_resposta_invertida(e, botao_clicado_ref, todos_botoes_opcoes_ref, txt_feedback_ctrl_ref, btn_proxima_ctrl_ref):
         dados_botao = botao_clicado_ref.data
@@ -1272,7 +1268,7 @@ def build_tela_custom_quiz(page: Page):
 
     formula_obj = current_custom_formula_for_quiz
     texto_pergunta = Text(size=24, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
-    botoes_opcoes = [ElevatedButton(width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
+    botoes_opcoes = [ElevatedButton(text="", width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
     texto_feedback = Text(size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA)
 
     def generate_notable_formula_question_data(quiz_config):
@@ -1295,47 +1291,111 @@ def build_tela_custom_quiz(page: Page):
             return None
 
         local_vars_values = {}
-        val_a, val_b = None, None
 
-        if 'a' in variables_defs:
-            range_a_config = user_ranges.get('a', {'min': 1, 'max': 10})
-            min_a_constr = range_constraints.get('a', {}).get('min', 1)
-            actual_min_a = max(range_a_config['min'], min_a_constr)
-            actual_max_a = range_a_config['max']
-            if actual_min_a > actual_max_a : actual_min_a = actual_max_a
-            val_a = random.randint(actual_min_a, actual_max_a)
-            local_vars_values['a'] = val_a
+        # Primeiro, processa todas as variáveis individualmente com seus ranges
+        for var_name in variables_defs:
+            user_range_for_var = user_ranges.get(var_name, {})
+            formula_constraints_for_var = range_constraints.get(var_name, {})
 
-        if 'b' in variables_defs:
-            range_b_config = user_ranges.get('b', {'min': 1, 'max': 10})
-            min_b_constr = range_constraints.get('b', {}).get('min', 1)
-            actual_min_b = max(range_b_config['min'], min_b_constr)
-            actual_max_b = range_b_config['max']
+            # Determina o min e max para esta variável
+            # Prioridade: user_range > formula_constraint > default (1-10 ou específico da var)
+            default_min_val = 1
+            default_max_val = 10
+            if var_name == 'V': # Exemplo de default específico para 'V'
+                default_min_val = 10
+                default_max_val = 1000
 
-            if range_constraints.get('b', {}).get('less_than_a') and val_a is not None:
-                actual_max_b = min(actual_max_b, val_a - 1)
-            elif range_constraints.get('b', {}).get('less_than_equal_a') and val_a is not None:
-                actual_max_b = min(actual_max_b, val_a)
+            min_val = user_range_for_var.get('min', formula_constraints_for_var.get('min', default_min_val))
+            max_val = user_range_for_var.get('max', formula_constraints_for_var.get('max', default_max_val))
 
-            if actual_min_b > actual_max_b:
-                if range_constraints.get('b', {}).get('less_than_a') and val_a == 1:
-                    print(f"Aviso: Não é possível sortear b < a quando a=1 para fórmula {formula_id}. Tentando a=2.")
-                    val_a = 2
-                    local_vars_values['a'] = val_a
-                    actual_max_b = min(range_b_config['max'], val_a -1)
-                    if actual_min_b > actual_max_b:
-                        print(f"Erro Crítico: Range inválido para 'b' mesmo após ajuste de 'a' para fórmula {formula_id}")
-                        return None
+            if min_val > max_val:
+                print(f"Aviso: Range inválido para '{var_name}' (min: {min_val} > max: {max_val}) na fórmula {formula_id}. Forçando min = max.")
+                min_val = max_val
+
+            local_vars_values[var_name] = random.randint(min_val, max_val)
+
+        # Depois, ajusta variáveis com dependências, como 'b' dependendo de 'a'
+        if 'a' in local_vars_values and 'b' in local_vars_values:
+            val_a = local_vars_values['a'] # Valor de 'a' já sorteado
+
+            user_range_for_b = user_ranges.get('b', {})
+            formula_constraints_for_b = range_constraints.get('b', {})
+
+            # Recalcula min/max para 'b' com base em 'a' se houver constraints
+            min_b = user_range_for_b.get('min', formula_constraints_for_b.get('min', 1))
+            max_b = user_range_for_b.get('max', formula_constraints_for_b.get('max', 10))
+
+            less_than_a = formula_constraints_for_b.get('less_than_a', False)
+            less_than_equal_a = formula_constraints_for_b.get('less_than_equal_a', False)
+
+            if less_than_a:
+                max_b = min(max_b, val_a - 1)
+            elif less_than_equal_a: # Note: 'less_than_equal_a' é string na definição original, aqui é bool
+                max_b = min(max_b, val_a)
+
+            # Ajuste para 'not_equal_to_g_A' (para g_B, se g_A é 'a' hipoteticamente)
+            # Esta parte é mais específica para g_A/g_B e foi tratada um pouco no loop anterior.
+            # Se 'b' tivesse uma constraint 'not_equal_to_a', seria aqui.
+
+            if min_b > max_b:
+                if less_than_a and val_a == 1: # Caso especial: b < a e a=1
+                    # Tentativa de ajuste: se 'a' pode ser aumentado para permitir 'b'
+                    # Isso complica, pois 'a' já foi usado. Idealmente, sortear 'a' primeiro com folga.
+                    # Por ora, se o range de 'b' se tornar inválido, pode levar a erro ou comportamento inesperado.
+                    # Vamos forçar min_b = max_b para evitar erro no randint, mas isso pode não ser o ideal.
+                    print(f"Aviso: Range para 'b' tornou-se inválido (min: {min_b} > max: {max_b}) devido à constraint com a={val_a} na fórmula {formula_id}. Forçando min_b = max_b.")
+                    min_b = max_b
                 else:
-                    actual_min_b = actual_max_b
+                     print(f"Aviso: Range para 'b' é inválido (min: {min_b} > max: {max_b}) na fórmula {formula_id}. Forçando min_b = max_b.")
+                     min_b = max_b
 
-            val_b = random.randint(actual_min_b, actual_max_b)
-            local_vars_values['b'] = val_b
+            if min_b <= max_b : # Só resorteia 'b' se o range for válido
+                 local_vars_values['b'] = random.randint(min_b, max_b)
+            else:
+                 # Se o range ainda for inválido (ex: max_b ficou < 0 e min_b é 1)
+                 # Isso indica um problema de configuração de constraint vs range.
+                 # Usar o valor já sorteado para 'b' ou um fallback.
+                 # Para simplificar, vamos manter o valor de 'b' sorteado no primeiro loop se o range ajustado for inválido.
+                 print(f"Aviso: Não foi possível re-sortear 'b' com constraints dependentes de 'a' válidas para fórmula {formula_id}. Usando valor inicial de 'b'.")
+
+
+        # Ajuste para g_B dependendo de g_A (not_equal_to_g_A)
+        if 'g_A' in local_vars_values and 'g_B' in local_vars_values:
+            val_g_A = local_vars_values['g_A']
+            formula_constraints_for_g_B = range_constraints.get('g_B', {})
+            if formula_constraints_for_g_B.get('not_equal_to_g_A'):
+                user_range_for_g_B = user_ranges.get('g_B', {})
+                min_g_B = user_range_for_g_B.get('min', formula_constraints_for_g_B.get('min', 1))
+                max_g_B = user_range_for_g_B.get('max', formula_constraints_for_g_B.get('max', 20)) # Default para g_B
+
+                if min_g_B > max_g_B: min_g_B = max_g_B # Sanity
+
+                current_g_B = local_vars_values['g_B']
+                if current_g_B == val_g_A: # Precisa resortear g_B
+                    attempts = 0
+                    while attempts < 20: # Tentar algumas vezes
+                        new_g_B = random.randint(min_g_B, max_g_B)
+                        if new_g_B != val_g_A:
+                            local_vars_values['g_B'] = new_g_B
+                            break
+                        attempts += 1
+                    else:
+                        print(f"Aviso: Não foi possível sortear g_B ({min_g_B}-{max_g_B}) diferente de g_A ({val_g_A}) para {formula_id}.")
+                        # Se falhar, g_B pode ser igual a g_A, o que pode ser ok ou não dependendo da fórmula.
+
+        # Validação final e chamada da função de cálculo
+        missing_keys = [key for key in variables_defs if key not in local_vars_values]
+        if missing_keys:
+            print(f"Erro Crítico: Chaves ausentes em local_vars_values para {formula_id} antes do cálculo: {missing_keys}. Valores atuais: {local_vars_values}")
+            return None
 
         try:
             correct_answer = calculation_func(**local_vars_values)
+        except KeyError as ke:
+            print(f"Erro de Chave ao calcular fórmula '{formula_id}' com valores {local_vars_values}. Chave ausente: {ke}. Definições de variáveis: {variables_defs}")
+            return None
         except Exception as e:
-            print(f"Erro ao calcular fórmula '{formula_id}' com valores {local_vars_values}. Erro: {e}")
+            print(f"Erro ao calcular fórmula '{formula_id}' com valores {local_vars_values}. Erro: {e}. Definições de variáveis: {variables_defs}")
             return None
 
         full_question_text = question_template.format(**local_vars_values)
@@ -2035,8 +2095,7 @@ def main(page: Page):
         elif page.route == "/divisao_inversa":
             page.views.append(View("/divisao_inversa", [build_tela_divisao_inversamente_proporcional(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
 
-        update_ui_elements_for_update_status()
-        page.update()
+        update_ui_elements_for_update_status() # Esta função já chama page.update()
 
     def view_pop(view_instance):
         page.views.pop()

@@ -1490,7 +1490,7 @@ def build_tela_custom_quiz(page: Page):
         animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO
     )
 
-    def handle_custom_answer(e, botao_clicado_ref, todos_botoes_opcoes_ref, txt_feedback_ctrl_ref, txt_lembrete_ctrl_ref, btn_proxima_ctrl_ref, question_data_ref):
+    def handle_custom_answer(e, botao_clicado_ref, todos_botoes_opcoes_ref, txt_feedback_ctrl_ref, txt_lembrete_ctrl_ref, btn_proxima_ctrl_ref, question_data_ref, formula_config_ref):
         selected_option = botao_clicado_ref.data['option']
         correct_answer = question_data_ref['correct_answer']
         reminder_text = question_data_ref.get('reminder_template', "")

@@ -344,7 +344,7 @@ current_custom_formula_for_quiz = None # Armazena a fórmula selecionada para o 
 
 # --- Constantes e Lógica de Atualização ---
 # !!! IMPORTANTE: Substitua pelo seu URL do repositório GitHub !!!
-GITHUB_REPO_URL_CONFIG = "https://api.github.com/repos/juanzitos252/Matem-tica/releases/latest"
+GITHUB_REPO_URL_CONFIG = "https://api.github.com/repos/juanzitos252/Mate2/releases/latest"
 APP_CURRENT_VERSION = "0.1.0" # Defina a versão atual do seu aplicativo
 
 # Variáveis globais para status da atualização

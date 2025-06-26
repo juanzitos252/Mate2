@@ -85,9 +85,9 @@ FORMULAS_NOTAVEIS = [
         'id': "grandezas_diretamente_proporcionais",
         'display_name': "Grandezas Diretamente Proporcionais",
         'variables': ['valor_total', 'nome_irmao1', 'idade_irmao1', 'nome_irmao2', 'idade_irmao2'],
-        'calculation_function': lambda **kwargs: int(round(calc_divisao_diretamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']])),
+        'calculation_function': lambda **kwargs: f"{int(round(calc_divisao_diretamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']]))},{int(round(calc_divisao_diretamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao2']]))}",
         'question_template': "Maria precisa dividir R${valor_total} entre seus filhos, {nome_irmao1} de {idade_irmao1} anos e {nome_irmao2} de {idade_irmao2} anos, em partes diretamente proporcionais às suas idades. Quanto {nome_irmao1} receberá? E {nome_irmao2}?",
-        'reminder_template': "Parte = (Idade / Soma das Idades) * Valor Total. O resultado é arredondado para o inteiro mais próximo.",
+        'reminder_template': "Responda com os dois valores separados por vírgula (ex: 120,60), na ordem em que foram perguntados. Parte = (Idade / Soma das Idades) * Valor Total. Arredonde para o inteiro mais próximo.",
         'range_constraints': {
             'valor_total': {'min': 20, 'max': 1000},
             'idade_irmao1': {'min': 1, 'max': 10},
@@ -109,9 +109,9 @@ FORMULAS_NOTAVEIS = [
         'id': "grandezas_inversamente_proporcionais",
         'display_name': "Grandezas Inversamente Proporcionais",
         'variables': ['valor_total', 'nome_irmao1', 'idade_irmao1', 'nome_irmao2', 'idade_irmao2'],
-        'calculation_function': lambda **kwargs: int(round(calc_divisao_inversamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']])),
+        'calculation_function': lambda **kwargs: f"{int(round(calc_divisao_inversamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']]))},{int(round(calc_divisao_inversamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao2']]))}",
         'question_template': "Carlos quer dividir R${valor_total} entre seu filho {nome_irmao1} de {idade_irmao1} anos e sua filha {nome_irmao2} de {idade_irmao2} anos, em partes inversamente proporcionais às suas idades. Quanto {nome_irmao1} receberá? E {nome_irmao2}?",
-        'reminder_template': "Parte = (Inverso da Idade / Soma dos Inversos das Idades) * Valor Total. O resultado é arredondado para o inteiro mais próximo.",
+        'reminder_template': "Responda com os dois valores separados por vírgula (ex: 60,120), na ordem em que foram perguntados. Parte = (Inverso da Idade / Soma dos Inversos das Idades) * Valor Total. Arredonde para o inteiro mais próximo.",
         'range_constraints': {
             'valor_total': {'min': 20, 'max': 1000},
             'idade_irmao1': {'min': 1, 'max': 10}, # Idade não pode ser 0 para inversamente
@@ -1391,90 +1391,139 @@ def build_tela_custom_quiz(page: Page):
 
         full_question_text = question_template.format(**local_vars_values)
 
-        # Para as fórmulas de grandezas, a `calculation_function` retorna a parte do primeiro irmão.
-        # A `correct_answer` é um inteiro.
-        # O `question_template` pergunta sobre ambos, mas o quiz foca no primeiro.
-        # As opções devem ser números inteiros.
+        # Para as fórmulas de grandezas, a `calculation_function` agora retorna uma string "valor1,valor2".
+        # A `correct_answer` será essa string.
+        # As opções devem ser strings no formato "valor1,valor2".
 
-        options_set = {int(round(correct_answer))} # Garante que a resposta correta seja int e esteja nas opções
-        attempts = 0
+        options_set = set()
+        final_options = []
 
-        # Gerar opções incorretas
-        # Tentar gerar opções que sejam +/- alguns reais ou uma pequena porcentagem da resposta correta
-        possible_offsets = [-10, -5, -2, -1, 1, 2, 5, 10] # Offsets em Reais
-        if abs(correct_answer) > 50:
-            possible_offsets.extend([int(round(correct_answer * 0.1)), int(round(correct_answer * -0.1))])
-            possible_offsets.extend([int(round(correct_answer * 0.05)), int(round(correct_answer * -0.05))])
-
-        # Remover duplicatas e o offset 0 caso exista
-        possible_offsets = sorted(list(set(o for o in possible_offsets if o != 0)))
-
-
-        while len(options_set) < 4 and attempts < 50:
-            offset_val = random.choice(possible_offsets)
-            new_opt_candidate = correct_answer + offset_val
-            new_opt = int(round(new_opt_candidate))
-
-            if new_opt >= 0 and new_opt not in options_set: # Evitar valores negativos se não fizerem sentido
-                options_set.add(new_opt)
-            attempts += 1
-
-        # Fallback se não conseguir gerar 4 opções distintas com offsets
-        idx_fallback = 1
-        while len(options_set) < 4 and idx_fallback < 20: # Limita para evitar loop infinito
-            # Tenta adicionar valores próximos à resposta correta, mas não muito distantes
-            alt_opt_positive = int(round(correct_answer + idx_fallback * (random.randint(1,3))))
-            alt_opt_negative = int(round(correct_answer - idx_fallback * (random.randint(1,3))))
-
-            if alt_opt_positive >= 0 and alt_opt_positive not in options_set:
-                options_set.add(alt_opt_positive)
-            if len(options_set) < 4 and alt_opt_negative >=0 and alt_opt_negative not in options_set:
-                 options_set.add(alt_opt_negative)
-            idx_fallback += 1
-
-        # Garantir 4 opções, adicionando aleatórios se necessário
-        # (mas garante que sejam inteiros e não negativos)
-        idx_random_fill = 1
-        while len(options_set) < 4:
-            # Gera um número aleatório em uma faixa plausível (ex: 0 a valor_total)
-            # ou próximo à resposta correta
-            max_random_val = local_vars_values.get('valor_total', correct_answer + 50)
-            min_random_val = 0
-            if max_random_val < min_random_val : max_random_val = min_random_val + 10 # Sanity check
-
-            random_fill_opt = random.randint(min_random_val, int(round(max_random_val)))
-            if random_fill_opt not in options_set:
-                options_set.add(random_fill_opt)
-            else: # Tenta um offset simples se o aleatório já existir
-                random_fill_opt = correct_answer + idx_random_fill * 11
-                if random_fill_opt >=0 and random_fill_opt not in options_set: options_set.add(int(round(random_fill_opt)))
-            idx_random_fill +=1
-            if idx_random_fill > 20: break # Evita loop infinito
-
-
-        final_options = list(options_set)
-        random.shuffle(final_options)
-
-        # A pergunta do quiz focará na parte do primeiro irmão, conforme decisão no plano.
-        # Ex: "Quanto {nome_irmao1} receberá?"
-        # Se a full_question_text já está assim, ótimo. Se não, precisaria ajustar aqui
-        # ou garantir que o question_template na FORMULAS_NOTAVEIS esteja adaptado.
-        # O question_template atual já pede ambos, mas a resposta é só do primeiro.
-        # Poderíamos modificar dinamicamente a `full_question_text` aqui para focar no primeiro.
-        # Exemplo:
         if formula_id.startswith("grandezas_"):
-            nome1 = local_vars_values.get('nome_irmao1', 'o primeiro')
-            full_question_text_quiz = f"Do valor de R${local_vars_values.get('valor_total', 'total')}, {local_vars_values.get('nome_irmao1','Pessoa1')} ({local_vars_values.get('idade_irmao1','X')} anos) e {local_vars_values.get('nome_irmao2','Pessoa2')} ({local_vars_values.get('idade_irmao2','Y')} anos) dividirão em partes {'diretamente' if 'diretamente' in formula_id else 'inversamente'} proporcionais às suas idades. Quanto {nome1} receberá?"
-        else:
-            full_question_text_quiz = full_question_text
+            options_set.add(correct_answer) # correct_answer já é a string "v1,v2"
 
+            # Gerar opções incorretas para grandezas
+            val_total = local_vars_values.get('valor_total', 200) # Default para evitar erro se não existir
+            parts_correct = [int(p) for p in correct_answer.split(',')]
+
+            attempts = 0
+            while len(options_set) < 4 and attempts < 50:
+                attempts += 1
+                type_error = random.choice(['swap', 'one_off', 'both_off', 'sum_differs'])
+
+                p1, p2 = parts_correct[0], parts_correct[1]
+
+                if type_error == 'swap':
+                    if p1 != p2: # Só faz sentido se os valores forem diferentes
+                        new_opt_str = f"{p2},{p1}"
+                    else: # Se forem iguais, tenta outra estratégia
+                        offset = random.randint(5, 20) * random.choice([-1,1])
+                        new_opt_str = f"{max(0, p1 + offset)},{max(0, p2 - offset)}" # Mantém a soma
+                        if new_opt_str == correct_answer: # Evita adicionar a correta de novo
+                            new_opt_str = f"{max(0, p1 - offset)},{max(0, p2 + offset)}"
+
+
+                elif type_error == 'one_off':
+                    offset = random.randint(max(1, int(p1 * 0.1)), max(5, int(p1 * 0.25))) * random.choice([-1, 1])
+                    if random.choice([True, False]):
+                        new_p1 = max(0, p1 + offset)
+                        new_p2 = p2
+                        # Ajustar new_p2 para que a soma ainda seja val_total, se possível, ou próximo
+                        # new_p2 = val_total - new_p1 # Isso faria a soma ser sempre correta, o que não queremos para todas as opções.
+                        # Para 'one_off', a outra parte pode ficar igual ou ser levemente ajustada para não bater a soma exata.
+                        if abs(new_p1 + new_p2 - val_total) > val_total * 0.05 : # Se a soma ficou muito distante
+                             new_p2 = max(0, val_total - new_p1) if (val_total - new_p1) > 0 else p2 # Tenta ajustar
+                    else:
+                        new_p1 = p1
+                        new_p2 = max(0, p2 + offset)
+                        if abs(new_p1 + new_p2 - val_total) > val_total * 0.05 :
+                             new_p1 = max(0, val_total - new_p2) if (val_total - new_p2) > 0 else p1
+
+
+                    new_opt_str = f"{int(round(new_p1))},{int(round(new_p2))}"
+
+                elif type_error == 'both_off':
+                    offset1 = random.randint(max(1, int(p1 * 0.1)), max(5, int(p1 * 0.2))) * random.choice([-1, 1])
+                    offset2 = random.randint(max(1, int(p2 * 0.1)), max(5, int(p2 * 0.2))) * random.choice([-1, 1])
+                    new_p1 = max(0, p1 + offset1)
+                    new_p2 = max(0, p2 + offset2)
+                    new_opt_str = f"{int(round(new_p1))},{int(round(new_p2))}"
+
+                else: # sum_differs (ou fallback)
+                    # Gera duas partes que somam algo diferente do valor_total
+                    new_p1 = max(0, p1 + random.randint(-int(val_total*0.15), int(val_total*0.15)))
+                    new_p2 = max(0, val_total - new_p1 + random.randint(-int(val_total*0.1), int(val_total*0.1)) * random.choice([-1,1,1])) # Garante que a soma não seja exatamente val_total
+                    if new_p1 == p1 and new_p2 == p2: # Evita adicionar a correta
+                        new_p2 += random.randint(5,15) * random.choice([-1,1])
+                        new_p2 = max(0, new_p2)
+
+                    new_opt_str = f"{int(round(new_p1))},{int(round(new_p2))}"
+
+                if new_opt_str not in options_set:
+                    options_set.add(new_opt_str)
+
+            final_options = list(options_set)
+            while len(final_options) < 4: # Fallback se não gerou 4 opções
+                fb_p1 = random.randint(0, int(round(val_total)))
+                fb_p2 = max(0, int(round(val_total - fb_p1 + random.randint(-20,20)))) # Soma próxima, mas não exata
+                fb_opt_str = f"{fb_p1},{fb_p2}"
+                if fb_opt_str not in final_options:
+                    final_options.append(fb_opt_str)
+                else: # Evita duplicatas no fallback
+                    final_options.append(f"{fb_p1+1},{max(0,fb_p2-1)}")
+
+
+            random.shuffle(final_options)
+
+        else: # Lógica original para outras fórmulas que retornam int/float
+            options_set_num = {int(round(float(correct_answer)))} # Converte para float primeiro em caso de erro
+            attempts = 0
+            # Gerar opções incorretas
+            ca_num = float(correct_answer)
+            possible_offsets = [-10, -5, -2, -1, 1, 2, 5, 10]
+            if abs(ca_num) > 50:
+                possible_offsets.extend([int(round(ca_num * 0.1)), int(round(ca_num * -0.1))])
+                possible_offsets.extend([int(round(ca_num * 0.05)), int(round(ca_num * -0.05))])
+            possible_offsets = sorted(list(set(o for o in possible_offsets if o != 0)))
+
+            while len(options_set_num) < 4 and attempts < 50:
+                offset_val = random.choice(possible_offsets) if possible_offsets else random.randint(-5,5)
+                new_opt_candidate = ca_num + offset_val
+                new_opt = int(round(new_opt_candidate))
+                if new_opt not in options_set_num: options_set_num.add(new_opt)
+                attempts += 1
+
+            idx_fallback = 1
+            while len(options_set_num) < 4 and idx_fallback < 20:
+                alt_opt_positive = int(round(ca_num + idx_fallback * (random.randint(1,3))))
+                alt_opt_negative = int(round(ca_num - idx_fallback * (random.randint(1,3))))
+                if alt_opt_positive not in options_set_num: options_set_num.add(alt_opt_positive)
+                if len(options_set_num) < 4 and alt_opt_negative not in options_set_num: options_set_num.add(alt_opt_negative)
+                idx_fallback += 1
+
+            while len(options_set_num) < 4:
+                random_fill_opt = random.randint(int(round(ca_num-20)), int(round(ca_num+20)))
+                if random_fill_opt not in options_set_num: options_set_num.add(random_fill_opt)
+
+            final_options = [str(opt) for opt in list(options_set_num)] # Converte para string
+            random.shuffle(final_options)
+
+
+        # A pergunta do quiz já está completa no question_template para grandezas.
+        # Para outras, 'full_question_text' é usado.
+        # A 'correct_answer' agora é uma string para grandezas, ou int/float convertido para string para outras.
+
+        full_question_text_quiz = full_question_text # Para fórmulas não-grandezas
+        if formula_id.startswith("grandezas_"):
+             # A full_question_text já é a pergunta completa para grandezas.
+             # Não precisa do f-string de antes que focava só no primeiro.
+             full_question_text_quiz = full_question_text
 
         return {
-            'full_question': full_question_text_quiz, # Usar a pergunta focada para o quiz
+            'full_question': full_question_text_quiz,
             'options': final_options[:4],
-            'correct_answer': int(round(correct_answer)), # Garantir que a resposta correta seja int
+            'correct_answer': str(correct_answer), # Garante que a resposta correta seja string
             'reminder_template': reminder_template,
-            'original_question_template_for_display': full_question_text # Manter o template original para exibição se necessário
+            'original_question_template_for_display': full_question_text
         }
 
     botao_proxima = ElevatedButton("Próxima Pergunta", on_click=None, visible=False, width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
@@ -1558,10 +1607,13 @@ def build_tela_custom_quiz(page: Page):
 
         for i in range(4):
             if i < len(question_data['options']):
-                op_val = question_data['options'][i]
-                # Para grandezas, as opções são valores inteiros (Reais)
-                btn_opcoes_ctrls[i].text = f"R$ {op_val}" if formula_config_ref.get('formula_id',"").startswith("grandezas_") else str(op_val)
-                btn_opcoes_ctrls[i].data = {'option': op_val} # op_val já é int
+                op_val_str = str(question_data['options'][i]) # Options are now always strings
+
+                # Para grandezas, as opções são "valor1,valor2" e não devem ter "R$" prefixo.
+                # Para outras fórmulas, as opções são números (convertidos para string) e podem ter "R$" se apropriado (mas a lógica atual não adiciona R$ para elas de forma genérica aqui).
+                # A decisão de adicionar "R$" foi removida para simplificar, pois o formato da opção já é o display.
+                btn_opcoes_ctrls[i].text = op_val_str
+                btn_opcoes_ctrls[i].data = {'option': op_val_str} # op_val_str é a string da opção
                 btn_opcoes_ctrls[i].on_click = lambda e, btn=btn_opcoes_ctrls[i]: handle_custom_answer(e, btn, btn_opcoes_ctrls, txt_feedback_ctrl, txt_lembrete_ctrl, btn_proxima_ctrl, question_data_storage, formula_config_ref)
                 btn_opcoes_ctrls[i].bgcolor = obter_cor_do_tema_ativo("botao_opcao_quiz_bg")
                 btn_opcoes_ctrls[i].color = obter_cor_do_tema_ativo("botao_opcao_quiz_texto")

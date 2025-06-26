@@ -12,6 +12,7 @@ from packaging import version
 import subprocess
 import threading
 import os # Adicionado para manipulação de caminhos
+import math # Adicionado para ceil e floor
 
 # --- Definições das Fórmulas Notáveis (Integrado de formula_definitions.py) ---
 
@@ -85,20 +86,20 @@ FORMULAS_NOTAVEIS = [
         'id': "grandezas_diretamente_proporcionais",
         'display_name': "Grandezas Diretamente Proporcionais",
         'variables': ['valor_total', 'nome_irmao1', 'idade_irmao1', 'nome_irmao2', 'idade_irmao2'],
-        'calculation_function': lambda **kwargs: f"{int(round(calc_divisao_diretamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']]))},{int(round(calc_divisao_diretamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao2']]))}",
+        'calculation_function': lambda **kwargs: f"{calc_divisao_diretamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']]},{calc_divisao_diretamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao2']]}",
         'question_template': "Maria precisa dividir R${valor_total} entre seus filhos, {nome_irmao1} de {idade_irmao1} anos e {nome_irmao2} de {idade_irmao2} anos, em partes diretamente proporcionais às suas idades. Quanto {nome_irmao1} receberá? E {nome_irmao2}?",
-        'reminder_template': "Responda com os dois valores separados por vírgula (ex: 120,60), na ordem em que foram perguntados. Parte = (Idade / Soma das Idades) * Valor Total. Arredonde para o inteiro mais próximo.",
+        'reminder_template': "Responda com os dois valores inteiros separados por vírgula (ex: 120,60), na ordem em que foram perguntados. Parte = (Idade / Soma das Idades) * Valor Total.",
         'range_constraints': {
-            'valor_total': {'min': 20, 'max': 1000},
+            'valor_total': {'min': 20, 'max': 1000}, # Este range será um guia para o valor_total final
             'idade_irmao1': {'min': 1, 'max': 10},
             'idade_irmao2': {'min': 1, 'max': 10, 'not_equal_to_var': 'idade_irmao1'} # Para garantir idades diferentes e evitar divisão trivialmente igual
         },
         'variable_labels': {
-            'valor_total': "Valor Total (R$)",
+            'valor_total': "Valor Total (R$) (será ajustado para divisão exata)",
             'nome_irmao1': "Nome Irmão(ã) 1", # Será preenchido aleatoriamente
-            'idade_irmao1': "Idade Irmão(ã) 1 (1-10)",
+            'idade_irmao1': "Idade Irmão(ã) 1 (1-10, inteiro)",
             'nome_irmao2': "Nome Irmão(ã) 2", # Será preenchido aleatoriamente
-            'idade_irmao2': "Idade Irmão(ã) 2 (1-10, ≠ Idade 1)"
+            'idade_irmao2': "Idade Irmão(ã) 2 (1-10, ≠ Idade 1, inteiro)"
         },
         'custom_variable_generators': {
             'nome_irmao1': lambda: random.choice(["Ana", "João", "Sofia"]),
@@ -109,20 +110,20 @@ FORMULAS_NOTAVEIS = [
         'id': "grandezas_inversamente_proporcionais",
         'display_name': "Grandezas Inversamente Proporcionais",
         'variables': ['valor_total', 'nome_irmao1', 'idade_irmao1', 'nome_irmao2', 'idade_irmao2'],
-        'calculation_function': lambda **kwargs: f"{int(round(calc_divisao_inversamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']]))},{int(round(calc_divisao_inversamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao2']]))}",
+        'calculation_function': lambda **kwargs: f"{calc_divisao_inversamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao1']]},{calc_divisao_inversamente_proporcional(kwargs['valor_total'], [(kwargs['nome_irmao1'], kwargs['idade_irmao1']), (kwargs['nome_irmao2'], kwargs['idade_irmao2'])])[kwargs['nome_irmao2']]}",
         'question_template': "Carlos quer dividir R${valor_total} entre seu filho {nome_irmao1} de {idade_irmao1} anos e sua filha {nome_irmao2} de {idade_irmao2} anos, em partes inversamente proporcionais às suas idades. Quanto {nome_irmao1} receberá? E {nome_irmao2}?",
-        'reminder_template': "Responda com os dois valores separados por vírgula (ex: 60,120), na ordem em que foram perguntados. Parte = (Inverso da Idade / Soma dos Inversos das Idades) * Valor Total. Arredonde para o inteiro mais próximo.",
+        'reminder_template': "Responda com os dois valores inteiros separados por vírgula (ex: 60,120), na ordem em que foram perguntados. Parte = (Inverso da Idade Ajustado / Soma dos Inversos Ajustados) * Valor Total.",
         'range_constraints': {
-            'valor_total': {'min': 20, 'max': 1000},
+            'valor_total': {'min': 20, 'max': 1000}, # Este range será um guia para o valor_total final
             'idade_irmao1': {'min': 1, 'max': 10}, # Idade não pode ser 0 para inversamente
             'idade_irmao2': {'min': 1, 'max': 10, 'not_equal_to_var': 'idade_irmao1'} # Idade não pode ser 0 e diferente da outra
         },
         'variable_labels': {
-            'valor_total': "Valor Total (R$)",
+            'valor_total': "Valor Total (R$) (será ajustado para divisão exata)",
             'nome_irmao1': "Nome Filho(a) 1",
-            'idade_irmao1': "Idade Filho(a) 1 (1-10)",
+            'idade_irmao1': "Idade Filho(a) 1 (1-10, inteiro)",
             'nome_irmao2': "Nome Filho(a) 2",
-            'idade_irmao2': "Idade Filho(a) 2 (1-10, ≠ Idade 1)"
+            'idade_irmao2': "Idade Filho(a) 2 (1-10, ≠ Idade 1, inteiro)"
         },
         'custom_variable_generators': {
             'nome_irmao1': lambda: random.choice(["Bia", "Davi", "Laura"]),
@@ -151,40 +152,159 @@ def calc_divisao_diretamente_proporcional(valor_total: float, grandezas: list[tu
     """
     soma_grandezas = sum(g[1] for g in grandezas)
     if soma_grandezas == 0:
-        return {item[0]: 0 for item in grandezas} # Evita divisão por zero e retorna 0 para todos
+        # Se a soma das grandezas é 0, e o valor_total não é 0, não é possível dividir.
+        # Se valor_total também é 0, então cada parte é 0.
+        # Para garantir inteiros, retornaremos 0 para todos se valor_total for 0,
+        # ou um erro/dicionário vazio indicando impossibilidade.
+        # Dado o contexto de idades, soma_grandezas > 0 é esperado.
+        return {item[0]: 0 for item in grandezas}
 
-    k = valor_total / soma_grandezas
+    # Para garantir resultados inteiros, valor_total DEVE ser divisível pela soma_grandezas.
+    # Esta função agora assume que os valores de entrada são tais que a divisão será inteira.
+    # A lógica de garantir isso será movida para a geração da pergunta.
+    if valor_total % soma_grandezas != 0:
+        # Idealmente, isso não deveria acontecer se a geração da pergunta for correta.
+        # Por ora, vamos forçar uma divisão inteira, mas isso pode levar a "perda" de valor.
+        # A melhor abordagem é garantir que valor_total seja múltiplo de soma_grandezas.
+        # Para este passo, vamos manter a expectativa de que a divisão será exata.
+        # Se não for, o resultado não será "perfeitamente" proporcional em inteiros sem ajustes.
+        # No entanto, a tarefa é que OS NÚMEROS APRESENTADOS sejam inteiros.
+        # A função deve retornar inteiros.
+        pass # A discussão sobre arredondamento ou ajuste de valor_total é para a geração.
+
+    k = valor_total // soma_grandezas # Usar divisão inteira
+
     resultado = {}
-    for nome, grandeza_valor in grandezas:
-        resultado[nome] = int(round(grandeza_valor * k)) # Arredonda e converte para int
+    soma_distribuida = 0
+    for i, (nome, grandeza_valor) in enumerate(grandezas):
+        if i == len(grandezas) - 1: # Último item recebe o restante para garantir a soma exata
+            parte = valor_total - soma_distribuida
+        else:
+            parte = grandeza_valor * k
+        resultado[nome] = parte
+        soma_distribuida += parte
+
+    # Verificação final para garantir que a soma das partes é igual ao valor total
+    if soma_distribuida != valor_total:
+        # Este bloco pode ser alcançado se k não for inteiro e a lógica de distribuição acima
+        # ainda assim não somar corretamente. A atribuição do restante ao último elemento visa evitar isso.
+        # print(f"Alerta: Soma distribuída {soma_distribuida} != valor_total {valor_total}")
+        # Ajuste simples: o último elemento recebe a diferença.
+        # Isso já é feito no loop.
+        pass
+
     return resultado
 
-def calc_divisao_inversamente_proporcional(valor_total: float, grandezas: list[tuple[str, float]]) -> dict[str, float]:
+def mmc(a, b):
+    """Calcula o Mínimo Múltiplo Comum de a e b."""
+    if a == 0 or b == 0:
+        return 0
+    abs_a, abs_b = abs(a), abs(b)
+    return abs(a*b) // mdc(a,b) if a !=0 and b != 0 else 0
+
+def mdc(a, b):
+    """Calcula o Máximo Divisor Comum de a e b."""
+    while(b):
+        a, b = b, a % b
+    return a
+
+def calc_divisao_inversamente_proporcional(valor_total: int, grandezas: list[tuple[str, int]]) -> dict[str, int]:
     """
-    Calcula a divisão de um valor total de forma inversamente proporcional às grandezas fornecidas.
+    Calcula a divisão de um valor total de forma inversamente proporcional às grandezas fornecidas,
+    garantindo resultados inteiros.
     Args:
-        valor_total: O valor total a ser dividido.
+        valor_total: O valor total a ser dividido (inteiro).
         grandezas: Uma lista de tuplas, onde cada tupla contém o nome (str)
-                   e o valor da grandeza (float). Ex: [("Manu", 4), ("Murilo", 3)]
-                   Os valores das grandezas devem ser diferentes de zero.
+                   e o valor da grandeza (inteiro > 0). Ex: [("Manu", 4), ("Murilo", 3)]
     Returns:
-        Um dicionário com o nome como chave e a parte correspondente como valor.
-        Retorna um dicionário vazio se alguma grandeza for zero ou se a soma dos inversos for zero.
+        Um dicionário com o nome como chave e a parte correspondente como valor (inteiro).
     """
-    soma_inversos_grandezas = 0
-    for nome, grandeza_valor in grandezas:
-        if grandeza_valor == 0:
-            # Divisão por zero não é permitida para uma grandeza individual
-            return {item[0]: 0 for item in grandezas} # Ou poderia lançar um erro
-        soma_inversos_grandezas += 1 / grandeza_valor
+    if not grandezas:
+        return {}
+    if any(g[1] <= 0 for g in grandezas):
+        # Grandezas devem ser positivas para divisão inversa fazer sentido e evitar divisão por zero no cálculo do inverso.
+        return {item[0]: 0 for item in grandezas} # Ou lançar erro
 
-    if soma_inversos_grandezas == 0: # Extremamente improvável com idades > 0
-        return {item[0]: 0 for item in grandezas} # Evita divisão por zero
+    # Passo 1: Encontrar o MMC de todas as grandezas (denominadores dos inversos)
+    # Se grandezas são idades i1, i2, ..., in
+    # Inversos: 1/i1, 1/i2, ..., 1/in
+    # Para tornar proporcionais a inteiros, multiplicamos pelo MMC(i1, i2, ..., in)
+    # Novas proporções: MMC/i1, MMC/i2, ..., MMC/in
 
-    k = valor_total / soma_inversos_grandezas
+    valores_grandezas = [g[1] for g in grandezas]
+
+    if not valores_grandezas: return {}
+
+    lcm = valores_grandezas[0]
+    for i in range(1, len(valores_grandezas)):
+        lcm = mmc(lcm, valores_grandezas[i])
+
+    if lcm == 0: # Se alguma grandeza for 0, o mmc pode ser 0. Já tratado pela verificação g[1] <= 0
+        return {item[0]: 0 for item in grandezas}
+
+    proporcoes_inteiras = []
+    soma_proporcoes_inteiras = 0
+    for nome, val_g in grandezas:
+        prop_inv_int = lcm // val_g # Esta será a "nova" grandeza para divisão direta
+        proporcoes_inteiras.append({'nome': nome, 'prop': prop_inv_int, 'original_g': val_g})
+        soma_proporcoes_inteiras += prop_inv_int
+
+    if soma_proporcoes_inteiras == 0:
+        # Isso aconteceria se todas as grandezas fossem extremamente grandes e lcm // val_g resultasse em 0 para todas.
+        # Ou se houvesse um problema com o cálculo do MMC/proporções.
+        # Com grandezas > 0, soma_proporcoes_inteiras deve ser > 0.
+        return {item[0]: 0 for item in grandezas}
+
+    # Agora, o problema é reduzido a uma divisão diretamente proporcional
+    # usando as 'proporcoes_inteiras' e 'soma_proporcoes_inteiras'.
+    # valor_total DEVE ser divisível por soma_proporcoes_inteiras para resultados perfeitamente inteiros.
+    # Assim como no caso direto, essa garantia virá da geração da pergunta.
+
+    # k = valor_total / soma_proporcoes_inteiras
+    # Se k não for inteiro, a divisão não será "perfeita" em inteiros.
+    # A função deve retornar inteiros.
+
     resultado = {}
-    for nome, grandeza_valor in grandezas:
-        resultado[nome] = int(round(k / grandeza_valor)) # Arredonda e converte para int
+    soma_distribuida = 0
+
+    # Para garantir que a soma das partes seja exatamente valor_total,
+    # distribuímos e ajustamos a última parte.
+    for i, item_prop in enumerate(proporcoes_inteiras):
+        if i == len(proporcoes_inteiras) - 1: # Último item
+            parte = valor_total - soma_distribuida
+        else:
+            # A parte é (item_prop['prop'] / soma_proporcoes_inteiras) * valor_total
+            # Para evitar float, e assumindo que valor_total é múltiplo de soma_proporcoes_inteiras:
+            # parte = item_prop['prop'] * (valor_total // soma_proporcoes_inteiras)
+            # Se não for múltiplo, a divisão não será exata.
+            # A tarefa é que os números *apresentados* sejam inteiros.
+            # A geração da pergunta deve garantir que `valor_total % soma_proporcoes_inteiras == 0`.
+            # Por ora, se não for, haverá um "erro" de arredondamento implícito ou explícito.
+            # Vamos usar a divisão inteira para k_inv e distribuir.
+            if valor_total % soma_proporcoes_inteiras != 0:
+                 # Sinaliza que a geração da pergunta precisa ser ajustada.
+                 # print(f"Alerta Inverso: valor_total {valor_total} não é perfeitamente divisível por soma_proporcoes_inteiras {soma_proporcoes_inteiras}")
+                 # Para fins de cálculo aqui, continuamos com a divisão inteira e ajustamos o último.
+                 pass
+
+            k_inv = valor_total // soma_proporcoes_inteiras # Constante de proporcionalidade (inteira ou não)
+            parte = item_prop['prop'] * k_inv
+
+        resultado[item_prop['nome']] = parte
+        soma_distribuida += parte
+
+    # Ajuste final se a soma não bater (principalmente se k_inv não fosse inteiro)
+    # A lógica de atribuir o restante ao último item já cobre isso.
+    if soma_distribuida != valor_total and len(proporcoes_inteiras) > 0:
+        # Se houve um desvio e há itens para ajustar
+        diff = valor_total - soma_distribuida
+        # Adiciona a diferença ao último elemento que foi calculado (se houver)
+        # Este ajuste é crucial para garantir que a soma das partes seja igual ao valor_total.
+        # A última parte calculada no loop já é 'valor_total - soma_distribuida_anterior',
+        # então este bloco pode ser redundante, mas é uma salvaguarda.
+        ultimo_nome = proporcoes_inteiras[-1]['nome']
+        resultado[ultimo_nome] += diff # Adiciona o que faltou/removeu o que excedeu
+
     return resultado
 
 # --- Fim das Definições das Fórmulas Notáveis ---
@@ -1312,7 +1432,8 @@ def build_tela_custom_quiz(page: Page):
         calculation_func = formula_definition.get('calculation_function')
         question_template = formula_definition.get('question_template')
         reminder_template = formula_definition.get('reminder_template')
-        range_constraints = formula_definition.get('range_constraints', {})
+        range_constraints = formula_definition.get('range_constraints', {}) # Constraints gerais da fórmula
+        user_range_overrides = quiz_config.get('ranges', {}) # Ranges específicos do usuário para esta config de quiz
 
         if not all([variables_defs, calculation_func, question_template, reminder_template]):
             print(f"Erro: Definição da fórmula incompleta para ID: {formula_id}")
@@ -1320,76 +1441,183 @@ def build_tela_custom_quiz(page: Page):
 
         local_vars_values = {}
 
-        # Primeiro, processa todas as variáveis individualmente com seus ranges
-        for var_name in variables_defs:
-            # Se houver um gerador customizado, usa ele
-            custom_generator = formula_definition.get('custom_variable_generators', {}).get(var_name)
-            if custom_generator:
-                local_vars_values[var_name] = custom_generator()
-                continue # Pula o processamento de range normal para esta variável
+        # Gerar idades primeiro, pois valor_total pode depender delas
+        idade_var_names = [v for v in variables_defs if 'idade' in v]
+        other_var_names = [v for v in variables_defs if 'idade' not in v and v != 'valor_total']
 
-            user_range_for_var = user_ranges.get(var_name, {})
+        # Processar idades
+        for var_name in idade_var_names:
+            # User overrides para ranges de 'a' e 'b' (que são mapeados para idades aqui)
+            # Se a config do quiz tem ranges específicos para 'a' ou 'b', e estamos processando 'idade_irmao1' (mapeado de 'a')
+            # ou 'idade_irmao2' (mapeado de 'b'), usamos esses ranges.
+            # Nota: Esta lógica de mapeamento 'a'/'b' para idades é um pouco implícita.
+            # Seria melhor se os user_ranges usassem os nomes das variáveis diretamente.
+            # Por ora, vamos assumir que 'a' corresponde à primeira idade, 'b' à segunda.
+
+            current_user_range_for_var = user_range_overrides.get(var_name, {}) # Tenta pegar pelo nome exato primeiro
+            if not current_user_range_for_var: # Fallback para mapeamento a/b se existir
+                if var_name == 'idade_irmao1' and 'a' in user_range_overrides:
+                    current_user_range_for_var = user_range_overrides['a']
+                elif var_name == 'idade_irmao2' and 'b' in user_range_overrides:
+                    current_user_range_for_var = user_range_overrides['b']
+
             formula_constraints_for_var = range_constraints.get(var_name, {})
 
             default_min_val = 1
-            default_max_val = 10
-            # Ajustar defaults específicos se necessário (ex: valor_total)
-            if var_name == 'valor_total':
-                default_min_val = 20
-                default_max_val = 1000
-            elif 'idade' in var_name: # Para 'idade_irmao1', 'idade_irmao2'
-                default_min_val = 1
-                default_max_val = 10
+            default_max_val = 10 # Default para idades
 
+            min_val = current_user_range_for_var.get('min', formula_constraints_for_var.get('min', default_min_val))
+            max_val = current_user_range_for_var.get('max', formula_constraints_for_var.get('max', default_max_val))
 
-            min_val = user_range_for_var.get('min', formula_constraints_for_var.get('min', default_min_val))
-            max_val = user_range_for_var.get('max', formula_constraints_for_var.get('max', default_max_val))
+            if min_val > max_val: min_val = max_val
 
-            if min_val > max_val:
-                print(f"Aviso: Range inválido para '{var_name}' (min: {min_val} > max: {max_val}) na fórmula {formula_id}. Forçando min = max.")
-                min_val = max_val
-
-            # Tratamento para constraint 'not_equal_to_var'
-            # Ex: idade_irmao2 não pode ser igual a idade_irmao1
             not_equal_to_var_name = formula_constraints_for_var.get('not_equal_to_var')
+            val_candidate = -1
             if not_equal_to_var_name and not_equal_to_var_name in local_vars_values:
                 forbidden_value = local_vars_values[not_equal_to_var_name]
-                # Tenta gerar um valor diferente
                 attempts = 0
-                while attempts < 20: # Limita tentativas para evitar loop infinito
+                while attempts < 20:
                     val_candidate = random.randint(min_val, max_val)
-                    if val_candidate != forbidden_value:
-                        local_vars_values[var_name] = val_candidate
-                        break
+                    if val_candidate != forbidden_value: break
                     attempts += 1
-                else: # Se não conseguiu gerar um valor diferente
-                    print(f"Aviso: Não foi possível gerar valor para '{var_name}' diferente de '{not_equal_to_var_name}' ({forbidden_value}) dentro do range [{min_val}-{max_val}]. Usando valor potencialmente igual.")
-                    local_vars_values[var_name] = random.randint(min_val, max_val) # Sorteia mesmo assim, pode ser igual
+                else: # Se não conseguiu gerar diferente, usa o último candidato
+                    pass # val_candidate já tem um valor
             else:
-                 local_vars_values[var_name] = random.randint(min_val, max_val)
+                val_candidate = random.randint(min_val, max_val)
+            local_vars_values[var_name] = val_candidate
+
+        # Gerar valor_total de forma coordenada para fórmulas de grandezas
+        if formula_id.startswith("grandezas_"):
+            idade1 = local_vars_values.get('idade_irmao1')
+            idade2 = local_vars_values.get('idade_irmao2')
+
+            if idade1 is None or idade2 is None:
+                print(f"Erro: Idades não geradas corretamente para {formula_id}")
+                return None # Não pode prosseguir
+
+            # Usar os ranges de valor_total da definição da fórmula como guia
+            vt_constraints = range_constraints.get('valor_total', {})
+            min_vt_desejado = vt_constraints.get('min', 20)
+            max_vt_desejado = vt_constraints.get('max', 1000)
+
+            novo_valor_total = -1
+
+            if formula_id == "grandezas_diretamente_proporcionais":
+                soma_idades = idade1 + idade2
+                if soma_idades == 0: return None # Evita divisão por zero
+
+                min_k = math.ceil(min_vt_desejado / soma_idades)
+                max_k = math.floor(max_vt_desejado / soma_idades)
+
+                k_multiplicador = random.randint(max(1, min_k), max(1, max_k)) if max_k >= min_k and max_k > 0 else random.randint(2,10)
+                novo_valor_total = soma_idades * k_multiplicador
+
+            elif formula_id == "grandezas_inversamente_proporcionais":
+                if idade1 == 0 or idade2 == 0: return None # Evita divisão por zero
+
+                l = mmc(idade1, idade2)
+                prop1 = l // idade1
+                prop2 = l // idade2
+                soma_proporcoes_inteiras = prop1 + prop2
+                if soma_proporcoes_inteiras == 0: return None
+
+                min_k = math.ceil(min_vt_desejado / soma_proporcoes_inteiras)
+                max_k = math.floor(max_vt_desejado / soma_proporcoes_inteiras)
+
+                k_multiplicador = random.randint(max(1, min_k), max(1, max_k)) if max_k >= min_k and max_k > 0 else random.randint(2,10)
+                novo_valor_total = soma_proporcoes_inteiras * k_multiplicador
+
+            local_vars_values['valor_total'] = novo_valor_total
+
+        # Processar outras variáveis (nomes, 'a', 'b' para fórmulas não-grandezas, e valor_total para não-grandezas)
+        vars_to_process_generically = other_var_names
+        if not formula_id.startswith("grandezas_"): # Se não for grandeza, valor_total é gerado genericamente
+            vars_to_process_generically.append('valor_total')
+
+        for var_name in vars_to_process_generically:
+            if var_name not in variables_defs: continue # Skip if var_name (like 'valor_total') isn't in this formula's defs
+            if var_name in local_vars_values: continue # Já processado (ex: valor_total para grandezas)
+
+            custom_generator = formula_definition.get('custom_variable_generators', {}).get(var_name)
+            if custom_generator:
+                local_vars_values[var_name] = custom_generator()
+                continue
+
+            current_user_range_for_var = user_range_overrides.get(var_name, {})
+            formula_constraints_for_var = range_constraints.get(var_name, {})
+
+            default_min = 1; default_max = 10 # Default genérico
+            if var_name == 'valor_total': # Default específico para valor_total (não-grandezas)
+                default_min = 20; default_max = 1000
+            elif var_name == 'a' or var_name == 'b': # Default para 'a' e 'b' de outras fórmulas
+                 default_min = formula_constraints_for_var.get('min', 1)
+                 default_max = formula_constraints_for_var.get('max', 10)
 
 
-        # Ajustes de dependência (ex: 'b' dependendo de 'a') já foram parcialmente cobertos
-        # pela ordem de processamento e pela constraint 'not_equal_to_var'.
-        # Se houver constraints mais complexas (ex: b < a), elas precisariam de uma segunda passada.
-        # Por ora, as constraints atuais são mais simples.
+            min_val = current_user_range_for_var.get('min', formula_constraints_for_var.get('min', default_min))
+            max_val = current_user_range_for_var.get('max', formula_constraints_for_var.get('max', default_max))
+
+            if min_val > max_val: min_val = max_val
+
+            # Constraints como less_than_a, etc. para 'a' e 'b'
+            # Esta lógica precisa ser robusta para diferentes tipos de constraints
+            # Exemplo: 'b' < 'a' ou 'b' <= 'a'
+            # Para simplificar, a lógica de not_equal_to_var já foi tratada para idades.
+            # Para 'a' e 'b' de outras fórmulas, constraints mais complexas podem precisar de ajuste aqui.
+            # A lógica atual de gerar 'a' e 'b' independentemente e depois validar pode não ser ideal.
+            # Por ora, vamos focar na geração simples por range.
+            local_vars_values[var_name] = random.randint(min_val, max_val)
 
         # Validação final e chamada da função de cálculo
-        missing_keys = [key for key in variables_defs if key not in local_vars_values and not formula_definition.get('custom_variable_generators', {}).get(key)]
-        if missing_keys:
-            print(f"Erro Crítico: Chaves ausentes em local_vars_values para {formula_id} antes do cálculo: {missing_keys}. Valores atuais: {local_vars_values}")
-            return None
+        # Garantir que todas as chaves necessárias para calculation_func estejam presentes
+        # As chaves para calculation_func são as listadas em formula_definition['variables']
+
+        # Preencher com nomes de irmãos se ainda não estiverem (caso não use custom_generator)
+        if 'nome_irmao1' in variables_defs and 'nome_irmao1' not in local_vars_values:
+            local_vars_values['nome_irmao1'] = random.choice(["Ana", "João", "Sofia"])
+        if 'nome_irmao2' in variables_defs and 'nome_irmao2' not in local_vars_values:
+            local_vars_values['nome_irmao2'] = random.choice(["Lucas", "Clara", "Pedro"])
+
+
+        # Verificar se todas as variáveis necessárias para a função de cálculo estão presentes
+        calculation_args = {}
+        for var_key in variables_defs: # Iterar sobre as chaves que a função de cálculo espera
+            if var_key not in local_vars_values:
+                # Tentar gerar se for uma variável simples que faltou e não tem custom generator
+                # Isso é um fallback, idealmente todas deveriam ser geradas acima.
+                if var_key not in formula_definition.get('custom_variable_generators', {}):
+                    f_constr = range_constraints.get(var_key, {})
+                    u_constr = user_range_overrides.get(var_key, {})
+                    min_v = u_constr.get('min', f_constr.get('min', 1))
+                    max_v = u_constr.get('max', f_constr.get('max', 10))
+                    if min_v > max_v: min_v = max_v
+                    local_vars_values[var_key] = random.randint(min_v, max_v)
+                    print(f"Aviso: Variável '{var_key}' gerada no fallback para {formula_id}.")
+
+            if var_key in local_vars_values:
+                 calculation_args[var_key] = local_vars_values[var_key]
+            else:
+                print(f"Erro Crítico: Chave '{var_key}' esperada pela função de cálculo não encontrada em local_vars_values para {formula_id} nem gerada no fallback. Valores: {local_vars_values}")
+                return None
+
 
         try:
-            correct_answer = calculation_func(**local_vars_values)
+            # Passar apenas os argumentos que a função de cálculo espera
+            correct_answer = calculation_func(**calculation_args)
         except KeyError as ke:
-            print(f"Erro de Chave ao calcular fórmula '{formula_id}' com valores {local_vars_values}. Chave ausente: {ke}. Definições de variáveis: {variables_defs}")
+            print(f"Erro de Chave ao calcular fórmula '{formula_id}' com args {calculation_args}. Chave ausente: {ke}. Esperadas: {variables_defs}")
             return None
         except Exception as e:
-            print(f"Erro ao calcular fórmula '{formula_id}' com valores {local_vars_values}. Erro: {e}. Definições de variáveis: {variables_defs}")
+            print(f"Erro ao calcular fórmula '{formula_id}' com args {calculation_args}. Erro: {e}. Esperadas: {variables_defs}")
             return None
 
-        full_question_text = question_template.format(**local_vars_values)
+        # Formatar a string da pergunta com todos os valores em local_vars_values
+        # (nomes dos irmãos, idades, valor_total etc.)
+        try:
+            full_question_text = question_template.format(**local_vars_values)
+        except KeyError as ke:
+            print(f"Erro de Chave ao formatar question_template para '{formula_id}' com local_vars_values {local_vars_values}. Chave ausente: {ke}.")
+            return None
 
         # Para as fórmulas de grandezas, a `calculation_function` agora retorna uma string "valor1,valor2".
         # A `correct_answer` será essa string.

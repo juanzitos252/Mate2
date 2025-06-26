@@ -799,18 +799,28 @@ def build_tela_formula_quiz_setup(page: Page):
     var_a_range_field.visible = False
     var_b_range_field.visible = False
 
-
+    # Definição da função movida para cima para que possa ser chamada antes do return
     def update_saved_quiz_configs_dropdown():
         saved_quiz_configs_dropdown.options = [
             ft.dropdown.Option(key=cfg['name'], text=cfg['name']) for cfg in custom_formulas_data
         ]
         current_selection = saved_quiz_configs_dropdown.value
         if custom_formulas_data:
+            # Tenta manter a seleção atual se ela ainda for válida
             if not any(opt.key == current_selection for opt in saved_quiz_configs_dropdown.options):
-                saved_quiz_configs_dropdown.value = custom_formulas_data[-1]['name']
+                # Se não for válida (ex: item removido), seleciona o último ou nenhum
+                saved_quiz_configs_dropdown.value = custom_formulas_data[-1]['name'] if custom_formulas_data else None
         else:
             saved_quiz_configs_dropdown.value = None
-        saved_quiz_configs_dropdown.update()
+
+        # A verificação se o controle está na página antes de .update() é crucial.
+        # No entanto, Flet pode lidar com isso internamente ou o erro ocorre se o controle
+        # *nunca* foi adicionado. A movimentação da chamada inicial para o final da
+        # construção da view é a principal correção.
+        if saved_quiz_configs_dropdown.page: # Verifica se o controle já foi adicionado à página
+            saved_quiz_configs_dropdown.update()
+        # Se não estiver na página ainda (o que não deveria acontecer se chamada no final da build),
+        # o .update() seria problemático. Flet pode ter proteções, mas a lógica é essa.
 
     def save_quiz_config_handler(e):
         global custom_formulas_data
@@ -880,7 +890,8 @@ def build_tela_formula_quiz_setup(page: Page):
             feedback_text.color = obter_cor_do_tema_ativo("feedback_erro_texto")
             page.update()
 
-    update_saved_quiz_configs_dropdown()
+    # A chamada inicial a update_saved_quiz_configs_dropdown() foi movida para o final da função,
+    # antes de retornar view_container.
 
     save_button = ElevatedButton("Salvar Configuração do Quiz", on_click=save_quiz_config_handler, width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
     start_quiz_button = ElevatedButton("Iniciar Quiz com Config. Salva", on_click=start_quiz_with_saved_config_handler, width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto"))
@@ -905,7 +916,27 @@ def build_tela_formula_quiz_setup(page: Page):
             start_quiz_button,
             Container(height=10),
             feedback_text,
-            Container(height=15),
+            Container(height=20, border=ft.border.only(bottom=ft.BorderSide(1, obter_cor_do_tema_ativo("texto_padrao"))), margin=ft.margin.symmetric(vertical=10)),
+            Text("3. Ferramentas de Cálculo Adicionais:", size=18, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao")),
+            Container(height=10),
+            ElevatedButton(
+                "Calculadora de Divisão Diretamente Proporcional",
+                on_click=lambda _: page.go("/divisao_direta"),
+                width=BOTAO_LARGURA_PRINCIPAL + 60, # Um pouco mais largo para o texto
+                height=BOTAO_ALTURA_PRINCIPAL,
+                bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"),
+                color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
+            ),
+            Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
+            ElevatedButton(
+                "Calculadora de Divisão Inversamente Proporcional",
+                on_click=lambda _: page.go("/divisao_inversa"),
+                width=BOTAO_LARGURA_PRINCIPAL + 60, # Um pouco mais largo para o texto
+                height=BOTAO_ALTURA_PRINCIPAL,
+                bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"),
+                color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
+            ),
+            Container(height=20),
             back_button,
         ],
         scroll=ScrollMode.AUTO,
@@ -921,6 +952,11 @@ def build_tela_formula_quiz_setup(page: Page):
     else:
         view_container.bgcolor = obter_cor_do_tema_ativo("fundo_pagina")
         view_container.gradient = None
+
+    # Chamada movida para aqui, após todos os controles da view estarem definidos e
+    # antes da view_container ser retornada.
+    update_saved_quiz_configs_dropdown()
+
     return view_container
 
 
@@ -951,14 +987,14 @@ def build_tela_apresentacao(page: Page):
             Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
             ElevatedButton("Estatísticas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/estatisticas"), tooltip="Veja seu progresso.", bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"), color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")),
             Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
-            ElevatedButton("Quiz com Fórmulas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/formula_quiz_setup"), tooltip="Crie ou selecione um quiz baseado em fórmulas notáveis.", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")),
-            Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
-            ElevatedButton("Divisão Diretamente Proporcional", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/divisao_direta"), tooltip="Calcular divisão diretamente proporcional.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")),
-            Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
-            ElevatedButton("Divisão Inversamente Proporcional", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/divisao_inversa"), tooltip="Calcular divisão inversamente proporcional.", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")),
-            Container(height=20, margin=ft.margin.only(top=10)),
+            ElevatedButton("Quiz com Fórmulas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/formula_quiz_setup"), tooltip="Crie ou selecione um quiz baseado em fórmulas notáveis ou acesse calculadoras.", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")),
+            # Container(height=ESPACAMENTO_BOTOES_APRESENTACAO), # Removido
+            # ElevatedButton("Divisão Diretamente Proporcional", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/divisao_direta"), tooltip="Calcular divisão diretamente proporcional.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")), # Removido
+            # Container(height=ESPACAMENTO_BOTOES_APRESENTACAO), # Removido
+            # ElevatedButton("Divisão Inversamente Proporcional", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/divisao_inversa"), tooltip="Calcular divisão inversamente proporcional.", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")), # Removido
+            Container(height=20, margin=ft.margin.only(top=10)), # Mantido para espaçamento antes dos botões de tema
         ] + controles_botoes_tema + [
-            Container(height=10),
+            Container(height=10), # Mantido para espaçamento antes do botão de atualização
             update_action_button, # Adiciona o botão de "Atualizar Agora" se visível
             Container(height=5),
         ],
@@ -1644,7 +1680,7 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
                 border=border.all(1, obter_cor_do_tema_ativo("textfield_border_color")),
                 border_radius=5,
                 padding=10,
-                margin=margin.symmetric(vertical=5)
+                margin=ft.margin.symmetric(vertical=5)
             ),
             Row([add_grandeza_button, remove_grandeza_button], alignment=MainAxisAlignment.CENTER, spacing=10),
             Container(height=15),
@@ -1849,7 +1885,7 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
             Container(
                 content=grandezas_column_inv,
                 border=border.all(1, obter_cor_do_tema_ativo("textfield_border_color")),
-                border_radius=5, padding=10, margin=margin.symmetric(vertical=5)
+                border_radius=5, padding=10, margin=ft.margin.symmetric(vertical=5)
             ),
             Row([add_grandeza_button_inv, remove_grandeza_button_inv], alignment=MainAxisAlignment.CENTER, spacing=10),
             Container(height=15),

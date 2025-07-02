@@ -726,31 +726,31 @@ def check_for_updates():
 
 # --- Temas e Gerenciamento de Tema ---
 TEMAS = {
-    "colorido": {"fundo_pagina": ft.Colors.PURPLE_50, "texto_titulos": ft.Colors.DEEP_PURPLE_700, "texto_padrao": ft.Colors.BLACK87, "botao_principal_bg": ft.Colors.DEEP_PURPLE_400, "botao_principal_texto": ft.Colors.WHITE, "botao_opcao_quiz_bg": ft.Colors.BLUE_300, "botao_opcao_quiz_texto": ft.Colors.WHITE, "botao_destaque_bg": ft.Colors.PINK_ACCENT_200, "botao_destaque_texto": ft.Colors.BLACK87, "botao_tema_bg": ft.Colors.PINK_ACCENT_100, "botao_tema_texto": ft.Colors.BLACK, "feedback_acerto_texto": ft.Colors.GREEN_600, "feedback_erro_texto": ft.Colors.RED_500, "feedback_acerto_botao_bg": ft.Colors.GREEN_100, "feedback_erro_botao_bg": ft.Colors.RED_100, "container_treino_bg": ft.Colors.WHITE, "container_treino_borda": ft.Colors.DEEP_PURPLE_400, "textfield_border_color": ft.Colors.DEEP_PURPLE_400, "dropdown_border_color": ft.Colors.DEEP_PURPLE_400,"progressbar_cor": ft.Colors.DEEP_PURPLE_400, "progressbar_bg_cor": ft.Colors.PURPLE_100, "update_icon_color_available": ft.Colors.AMBER_700, "update_icon_color_uptodate": ft.Colors.GREEN_700, "update_icon_color_error": ft.Colors.RED_700},
+    "colorido": {"fundo_pagina": ft.Colors.PURPLE_50, "texto_titulos": ft.Colors.DEEP_PURPLE_700, "texto_padrao": ft.Colors.BLACK87, "botao_principal_bg": ft.Colors.DEEP_PURPLE_400, "botao_principal_texto": ft.Colors.WHITE, "botao_opcao_quiz_bg": ft.Colors.BLUE_500, "botao_opcao_quiz_texto": ft.Colors.WHITE, "botao_destaque_bg": ft.Colors.PINK_ACCENT_200, "botao_destaque_texto": ft.Colors.BLACK87, "botao_tema_bg": ft.Colors.PINK_ACCENT_100, "botao_tema_texto": ft.Colors.BLACK, "feedback_acerto_texto": ft.Colors.GREEN_700, "feedback_erro_texto": ft.Colors.RED_700, "feedback_acerto_botao_bg": ft.Colors.GREEN_100, "feedback_erro_botao_bg": ft.Colors.RED_100, "container_treino_bg": ft.Colors.WHITE, "container_treino_borda": ft.Colors.DEEP_PURPLE_400, "textfield_border_color": ft.Colors.DEEP_PURPLE_400, "dropdown_border_color": ft.Colors.DEEP_PURPLE_400,"progressbar_cor": ft.Colors.DEEP_PURPLE_400, "progressbar_bg_cor": ft.Colors.PURPLE_100, "update_icon_color_available": ft.Colors.AMBER_700, "update_icon_color_uptodate": ft.Colors.GREEN_700, "update_icon_color_error": ft.Colors.RED_700},
     "claro": {"fundo_pagina": ft.Colors.GREY_100, "texto_titulos": ft.Colors.BLACK, "texto_padrao": ft.Colors.BLACK87, "botao_principal_bg": ft.Colors.BLUE_600, "botao_principal_texto": ft.Colors.WHITE, "botao_opcao_quiz_bg": ft.Colors.LIGHT_BLUE_200, "botao_opcao_quiz_texto": ft.Colors.BLACK87, "botao_destaque_bg": ft.Colors.CYAN_600, "botao_destaque_texto": ft.Colors.WHITE, "botao_tema_bg": ft.Colors.CYAN_200, "botao_tema_texto": ft.Colors.BLACK87,"feedback_acerto_texto": ft.Colors.GREEN_700, "feedback_erro_texto": ft.Colors.RED_700, "feedback_acerto_botao_bg": ft.Colors.GREEN_100, "feedback_erro_botao_bg": ft.Colors.RED_100, "container_treino_bg": ft.Colors.WHITE, "container_treino_borda": ft.Colors.BLUE_600, "textfield_border_color": ft.Colors.BLUE_600, "dropdown_border_color": ft.Colors.BLUE_600, "progressbar_cor": ft.Colors.BLUE_600, "progressbar_bg_cor": ft.Colors.BLUE_100, "update_icon_color_available": ft.Colors.ORANGE_ACCENT_700, "update_icon_color_uptodate": ft.Colors.GREEN_800, "update_icon_color_error": ft.Colors.RED_800},
     "escuro_moderno": {
-        "fundo_pagina": ft.Colors.TEAL_900, # Fallback for page.bgcolor
+        "fundo_pagina": ft.Colors.TEAL_900,
         "gradient_page_bg": ft.LinearGradient(
-            begin=alignment.top_center, # Changed from top_left
-            end=alignment.bottom_center,  # Changed from bottom_right
-            colors=[ft.Colors.INDIGO_900, ft.Colors.PURPLE_800, ft.Colors.TEAL_800], # Slightly adjusted shades for harmony
+            begin=alignment.top_center,
+            end=alignment.bottom_center,
+            colors=[ft.Colors.INDIGO_900, ft.Colors.PURPLE_800, ft.Colors.TEAL_800],
             stops=[0.1, 0.6, 1.0]
         ),
         "texto_titulos": ft.Colors.CYAN_ACCENT_200,
         "texto_padrao": ft.Colors.WHITE,
-        "botao_principal_bg": ft.Colors.PINK_ACCENT_400,
+        "botao_principal_bg": ft.Colors.MAGENTA_ACCENT_400, # Ajustado para melhor contraste
         "botao_principal_texto": ft.Colors.WHITE,
         "botao_opcao_quiz_bg": ft.Colors.BLUE_GREY_700,
         "botao_opcao_quiz_texto": ft.Colors.WHITE,
         "botao_destaque_bg": ft.Colors.TEAL_ACCENT_400,
         "botao_destaque_texto": ft.Colors.WHITE,
-        "botao_tema_bg": ft.Colors.with_opacity(0.2, ft.Colors.WHITE), # For theme selection buttons
-        "botao_tema_texto": ft.Colors.CYAN_ACCENT_100,                 # For theme selection buttons text
-        "feedback_acerto_texto": ft.Colors.GREEN_ACCENT_200,
-        "feedback_erro_texto": ft.Colors.RED_ACCENT_100,
-        "feedback_acerto_botao_bg": ft.Colors.with_opacity(0.3, ft.Colors.GREEN_ACCENT_100),
-        "feedback_erro_botao_bg": ft.Colors.with_opacity(0.3, ft.Colors.RED_ACCENT_100),
-        "container_treino_bg": ft.Colors.with_opacity(0.1, ft.Colors.WHITE), # Slightly more subtle frosted glass
+        "botao_tema_bg": ft.Colors.with_opacity(0.2, ft.Colors.WHITE),
+        "botao_tema_texto": ft.Colors.CYAN_ACCENT_100,
+        "feedback_acerto_texto": ft.Colors.GREEN_ACCENT_400, # Mais brilho
+        "feedback_erro_texto": ft.Colors.RED_ACCENT_200,   # Mais brilho
+        "feedback_acerto_botao_bg": ft.Colors.with_opacity(0.4, ft.Colors.GREEN_ACCENT_100),
+        "feedback_erro_botao_bg": ft.Colors.with_opacity(0.4, ft.Colors.RED_ACCENT_100),
+        "container_treino_bg": ft.Colors.with_opacity(0.15, ft.Colors.WHITE),
         "container_treino_borda": ft.Colors.CYAN_ACCENT_700,
         "textfield_border_color": ft.Colors.CYAN_ACCENT_700,
         "dropdown_border_color": ft.Colors.CYAN_ACCENT_700,
@@ -761,32 +761,37 @@ TEMAS = {
         "update_icon_color_error": ft.Colors.RED_ACCENT_400
     }
 }
-tema_ativo_nome = "colorido" # Default theme
-def obter_cor_do_tema_ativo(nome_cor_semantica: str, fallback_color=ft.Colors.BLACK): # Added fallback_color param
-    # Se o tema ativo for o novo escuro e a cor pedida for 'gradient_page_bg', retorna o objeto Gradient.
+tema_ativo_nome = "colorido"
+def obter_cor_do_tema_ativo(nome_cor_semantica: str, fallback_color=ft.Colors.BLACK):
     if tema_ativo_nome == "escuro_moderno" and nome_cor_semantica == "gradient_page_bg":
         return TEMAS["escuro_moderno"]["gradient_page_bg"]
 
     tema_atual = TEMAS.get(tema_ativo_nome, TEMAS["colorido"])
-    return tema_atual.get(nome_cor_semantica, fallback_color) # Use provided fallback
+    return tema_atual.get(nome_cor_semantica, fallback_color)
 
 # --- Constantes de UI (Dimensões e Animações) ---
-BOTAO_LARGURA_PRINCIPAL = 220
-BOTAO_ALTURA_PRINCIPAL = 50
-BOTAO_LARGURA_OPCAO_QUIZ = 150
-BOTAO_ALTURA_OPCAO_QUIZ = 50
-PADDING_VIEW = padding.symmetric(horizontal=25, vertical=20)
-ESPACAMENTO_COLUNA_GERAL = 15
-ESPACAMENTO_BOTOES_APRESENTACAO = 10
-ANIMACAO_FADE_IN_LENTO = Animation(400, AnimationCurve.EASE_IN)
-ANIMACAO_APARICAO_TEXTO_BOTAO = Animation(250, AnimationCurve.EASE_OUT)
-ANIMACAO_FEEDBACK_OPACIDADE = Animation(200, AnimationCurve.EASE_IN_OUT)
-ANIMACAO_FEEDBACK_ESCALA = Animation(300, AnimationCurve.EASE_OUT_BACK)
+BOTAO_LARGURA_PRINCIPAL = 230 # Leve aumento para acomodar ícones
+BOTAO_ALTURA_PRINCIPAL = 55 # Leve aumento
+BOTAO_LARGURA_OPCAO_QUIZ = 160 # Leve aumento
+BOTAO_ALTURA_OPCAO_QUIZ = 55 # Leve aumento
+PADDING_VIEW = padding.symmetric(horizontal=20, vertical=25) # Ajuste no padding vertical
+ESPACAMENTO_COLUNA_GERAL = 20 # Aumentado para mais respiro
+ESPACAMENTO_BOTOES_APRESENTACAO = 12 # Aumentado
+ANIMACAO_FADE_IN_LENTO = Animation(500, AnimationCurve.EASE_IN)
+ANIMACAO_APARICAO_TEXTO_BOTAO = Animation(300, AnimationCurve.EASE_OUT)
+ANIMACAO_FEEDBACK_OPACIDADE = Animation(250, AnimationCurve.EASE_IN_OUT)
+ANIMACAO_FEEDBACK_ESCALA = Animation(350, AnimationCurve.EASE_OUT_BACK)
 
 # --- Funções de Construção de Tela ---
 def mudar_tema(page: Page, novo_tema_nome: str):
     global tema_ativo_nome
     if tema_ativo_nome == novo_tema_nome:
+        page.show_snack_bar(
+            ft.SnackBar(
+                content=ft.Text(f"Tema '{novo_tema_nome.replace('_', ' ').title()}' já está ativo."),
+                open=True
+            )
+        )
         return
 
     tema_ativo_nome = novo_tema_nome
@@ -795,44 +800,80 @@ def mudar_tema(page: Page, novo_tema_nome: str):
         page.client_storage.set("tema_preferido_quiz_tabuada", novo_tema_nome)
 
     page.bgcolor = obter_cor_do_tema_ativo("fundo_pagina")
-
-    # Store current route
     current_route_val = page.route
-
-    # Clear existing views
     page.views.clear()
 
-    # Re-populate views directly, ensuring all build_... functions use the new theme.
-    # This logic is similar to what's in route_change.
+    # AppBar unificada para todas as telas - recriada aqui para pegar novas cores
+    app_bar = ft.AppBar(
+        title=Text("Quiz Mestre da Tabuada", color=obter_cor_do_tema_ativo("texto_titulos"), size=20, weight=FontWeight.BOLD),
+        center_title=True,
+        bgcolor=obter_cor_do_tema_ativo("fundo_pagina"),
+        leading_width=50,
+        actions=[
+            Row([
+                update_status_icon,
+                Container(width=5),
+                update_status_text,
+                Container(width=10)
+            ], alignment=MainAxisAlignment.CENTER, vertical_alignment=CrossAxisAlignment.CENTER),
+        ]
+    )
+    if current_route_val != "/": # Adiciona botão de voltar se não for a home
+        app_bar.leading = ft.IconButton(
+            ft.icons.ARROW_BACK_IOS_NEW_ROUNDED,
+            tooltip="Voltar",
+            on_click=lambda _: page.view_pop(page.views[-1]) if len(page.views) > 1 else page.go("/"),
+            icon_color=obter_cor_do_tema_ativo("texto_titulos")
+        )
 
-    # Base view (always present, typically the home screen)
+
+    view_content_map = {
+        "/": build_tela_apresentacao,
+        "/quiz": build_tela_quiz,
+        "/quiz_invertido": build_tela_quiz_invertido,
+        "/treino": build_tela_treino,
+        "/estatisticas": build_tela_estatisticas,
+        "/formula_quiz_setup": build_tela_formula_quiz_setup,
+        "/custom_quiz": build_tela_custom_quiz,
+        "/divisao_direta": build_tela_divisao_diretamente_proporcional,
+        "/divisao_inversa": build_tela_divisao_inversamente_proporcional,
+    }
+
+    # Adiciona a view base (home)
     page.views.append(
         View(
             route="/",
-            controls=[build_tela_apresentacao(page)],
+            controls=[view_content_map["/"](page)], # Sempre constrói a home
             vertical_alignment=MainAxisAlignment.CENTER,
-            horizontal_alignment=CrossAxisAlignment.CENTER
+            horizontal_alignment=CrossAxisAlignment.CENTER,
+            appbar=app_bar if current_route_val == "/" else ft.AppBar( # Recria appbar para view home
+                title=Text("Quiz Mestre da Tabuada", color=obter_cor_do_tema_ativo("texto_titulos"), size=20, weight=FontWeight.BOLD),
+                center_title=True,
+                bgcolor=obter_cor_do_tema_ativo("fundo_pagina"),
+                actions=app_bar.actions # Reutiliza actions
+            )
         )
     )
 
-    # Append the specific view for the current_route_val if it's not the base view.
-    # If current_route_val is "/", the base view is already the top view.
-    if current_route_val == "/quiz":
-        page.views.append(View("/quiz", [build_tela_quiz(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER))
-    elif current_route_val == "/quiz_invertido":
-        page.views.append(View("/quiz_invertido", [build_tela_quiz_invertido(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER))
-    elif current_route_val == "/treino":
-        page.views.append(View("/treino", [build_tela_treino(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER))
-    elif current_route_val == "/estatisticas":
-        page.views.append(View("/estatisticas", [build_tela_estatisticas(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER))
-    elif current_route_val == "/formula_quiz_setup":
-        page.views.append(View("/formula_quiz_setup", [build_tela_formula_quiz_setup(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER))
-    elif current_route_val == "/custom_quiz":
-        page.views.append(View("/custom_quiz", [build_tela_custom_quiz(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER))
+    # Adiciona a view atual se não for a home
+    if current_route_val != "/" and current_route_val in view_content_map:
+        page.views.append(
+            View(
+                route=current_route_val,
+                controls=[view_content_map[current_route_val](page)],
+                vertical_alignment=MainAxisAlignment.CENTER,
+                horizontal_alignment=CrossAxisAlignment.CENTER,
+                appbar=app_bar # Usa a app_bar com botão de voltar
+            )
+        )
 
     page.update()
-    # We avoid calling page.go() here as we've manually rebuilt the view stack.
-    # Calling page.go() would trigger route_change again, which is now redundant for this theme update.
+    page.show_snack_bar(
+        ft.SnackBar(
+            content=ft.Text(f"Tema '{novo_tema_nome.replace('_', ' ').title()}' aplicado!"),
+            open=True
+        )
+    )
 
 # --- Funções Auxiliares para Fórmulas ---
 # (parse_variable_ranges pode ser mantido se for útil para os ranges de 'a' e 'b' das fórmulas notáveis)
@@ -1109,49 +1150,88 @@ def build_tela_formula_quiz_setup(page: Page):
 
 
 def build_tela_apresentacao(page: Page):
+    def criar_botao_tema(texto_tema, nome_tema):
+        ativo = tema_ativo_nome == nome_tema
+        return ElevatedButton(
+            text=texto_tema,
+            on_click=lambda _: mudar_tema(page, nome_tema),
+            width=BOTAO_LARGURA_PRINCIPAL / 2.5, # Ajustado para caber 3 botões com mais facilidade
+            height=BOTAO_ALTURA_PRINCIPAL - 15, # Menor
+            bgcolor=obter_cor_do_tema_ativo("botao_tema_bg") if not ativo else obter_cor_do_tema_ativo("botao_destaque_bg"),
+            color=obter_cor_do_tema_ativo("botao_tema_texto") if not ativo else obter_cor_do_tema_ativo("botao_destaque_texto"),
+            border=ft.border.all(2, obter_cor_do_tema_ativo("texto_titulos")) if ativo else None,
+            tooltip=f"Aplicar tema {texto_tema}"
+        )
+
     controles_botoes_tema = [
-        Text("Escolha um Tema:", size=16, color=obter_cor_do_tema_ativo("texto_padrao")),
-        Container(height=5),
+        Text("Escolha um Tema:", size=16, color=obter_cor_do_tema_ativo("texto_padrao"), weight=FontWeight.BOLD),
+        Container(height=8),
         Row(
             [
-                ElevatedButton(text="Colorido", on_click=lambda _: mudar_tema(page, "colorido"), width=BOTAO_LARGURA_PRINCIPAL/2 - 5, height=BOTAO_ALTURA_PRINCIPAL-10, bgcolor=obter_cor_do_tema_ativo("botao_tema_bg"), color=obter_cor_do_tema_ativo("botao_tema_texto")),
-                ElevatedButton(text="Claro", on_click=lambda _: mudar_tema(page, "claro"), width=BOTAO_LARGURA_PRINCIPAL/2 - 5, height=BOTAO_ALTURA_PRINCIPAL-10, bgcolor=obter_cor_do_tema_ativo("botao_tema_bg"), color=obter_cor_do_tema_ativo("botao_tema_texto")),
-                ElevatedButton(text="Escuro Moderno", on_click=lambda _: mudar_tema(page, "escuro_moderno"), width=BOTAO_LARGURA_PRINCIPAL/2 - 5, height=BOTAO_ALTURA_PRINCIPAL-10, bgcolor=obter_cor_do_tema_ativo("botao_tema_bg"), color=obter_cor_do_tema_ativo("botao_tema_texto")),
+                criar_botao_tema("Colorido", "colorido"),
+                criar_botao_tema("Claro", "claro"),
+                criar_botao_tema("Escuro", "escuro_moderno"),
             ],
             alignment=MainAxisAlignment.CENTER,
-            spacing = 10
+            spacing=8
         )
     ]
+
+    def criar_botao_menu_principal(texto, rota, icone, is_destaque=False):
+        return ElevatedButton(
+            content=Row(
+                [
+                    Icon(icone, color=obter_cor_do_tema_ativo("botao_principal_texto") if not is_destaque else obter_cor_do_tema_ativo("botao_destaque_texto")),
+                    Text(texto, size=16, weight=FontWeight.MEDIUM, color=obter_cor_do_tema_ativo("botao_principal_texto") if not is_destaque else obter_cor_do_tema_ativo("botao_destaque_texto"))
+                ],
+                alignment=MainAxisAlignment.CENTER, spacing=10
+            ),
+            width=BOTAO_LARGURA_PRINCIPAL,
+            height=BOTAO_ALTURA_PRINCIPAL,
+            on_click=lambda _: page.go(rota),
+            tooltip=f"Acessar {texto}",
+            bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg") if is_destaque else obter_cor_do_tema_ativo("botao_principal_bg"),
+        )
+
     conteudo_apresentacao = Column(
         controls=[
-            Text("Quiz Mestre da Tabuada", size=32, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos")),
-            Text("Aprenda e memorize a tabuada de forma divertida e adaptativa!", size=18, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_padrao")),
-            Container(height=20),
-            ElevatedButton("Iniciar Quiz", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/quiz"), tooltip="Começar um novo quiz.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")),
+            Text("Quiz Mestre da Tabuada", size=30, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos")),
+            Text("Aprenda e memorize a tabuada de forma divertida e adaptativa!", size=16, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_padrao")),
+            Container(height=ESPACAMENTO_COLUNA_GERAL), # Usa a constante de espaçamento geral
+            criar_botao_menu_principal("Iniciar Quiz", "/quiz", ft.icons.PLAY_ARROW_ROUNDED),
             Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
-            ElevatedButton("Quiz Invertido", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/quiz_invertido"), tooltip="Qual multiplicação resulta no número?", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")),
+            criar_botao_menu_principal("Quiz Invertido", "/quiz_invertido", ft.icons.SWAP_HORIZ_ROUNDED, is_destaque=True),
             Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
-            ElevatedButton("Modo Treino", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/treino"), tooltip="Treinar uma tabuada.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")),
+            criar_botao_menu_principal("Modo Treino", "/treino", ft.icons.FITNESS_CENTER_ROUNDED),
             Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
-            ElevatedButton("Estatísticas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/estatisticas"), tooltip="Veja seu progresso.", bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"), color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")),
+            criar_botao_menu_principal("Estatísticas", "/estatisticas", ft.icons.BAR_CHART_ROUNDED, is_destaque=True), # Alternando destaque
             Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
-            ElevatedButton("Quiz com Fórmulas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/formula_quiz_setup"), tooltip="Crie ou selecione um quiz baseado em fórmulas notáveis ou acesse calculadoras.", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")),
-            Container(height=20, margin=ft.margin.only(top=10)), # Mantido para espaçamento antes dos botões de tema
+            criar_botao_menu_principal("Quiz com Fórmulas", "/formula_quiz_setup", ft.icons.CALCULATE_ROUNDED),
+            Container(height=ESPACAMENTO_COLUNA_GERAL + 10), # Mais espaço antes dos temas
         ] + controles_botoes_tema + [
-            Container(height=10), # Mantido para espaçamento antes do botão de atualização
-            update_action_button, # Adiciona o botão de "Atualizar Agora" se visível
-            Container(height=5),
+            Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
+            update_action_button,
+            Container(height=5), # Espaço abaixo do botão de atualizar
         ],
-        alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, spacing=ESPACAMENTO_COLUNA_GERAL,
-        scroll=ScrollMode.AUTO
+        alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, spacing=ESPACAMENTO_BOTOES_APRESENTACAO, # Usar espaçamento menor entre botões
+        scroll=ScrollMode.AUTO,
+        # Animação de entrada para o conteúdo principal
+        opacity=0,
+        animate_opacity=ANIMACAO_FADE_IN_LENTO,
     )
+    # Ativar animação de entrada
+    page.run_thread(target=lambda: (setattr(conteudo_apresentacao, "opacity", 1), page.update()))
+
 
     view_container = Container(
         content=conteudo_apresentacao,
         alignment=alignment.center,
         expand=True,
-        padding=PADDING_VIEW
+        padding=PADDING_VIEW,
+        # opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO # Movido para o Column interno
     )
+    # page.run_thread(target=lambda: (setattr(view_container, "opacity", 1), page.update()))
+
 
     if tema_ativo_nome == "escuro_moderno":
         view_container.gradient = obter_cor_do_tema_ativo("gradient_page_bg")
@@ -1163,9 +1243,9 @@ def build_tela_apresentacao(page: Page):
     return view_container
 
 def build_tela_quiz(page: Page):
-    texto_pergunta = Text(size=30, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
+    texto_pergunta = Text(size=24, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
     botoes_opcoes = [ElevatedButton(text="", width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
-    texto_feedback = Text(size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA)
+    texto_feedback = Text(size=16, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA)
     def handle_resposta(e, botao_clicado_ref, todos_botoes_opcoes_ref, txt_feedback_ctrl_ref, btn_proxima_ctrl_ref):
         dados_botao = botao_clicado_ref.data
         era_correta = dados_botao['correta']
@@ -1209,9 +1289,34 @@ def build_tela_quiz(page: Page):
         page_ref.update()
     botao_proxima.on_click = lambda _: carregar_nova_pergunta(page, texto_pergunta, botoes_opcoes, texto_feedback, botao_proxima)
     carregar_nova_pergunta(page, texto_pergunta, botoes_opcoes, texto_feedback, botao_proxima)
-    botao_voltar = ElevatedButton("Voltar ao Menu", on_click=lambda _: page.go("/"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Retornar à tela inicial.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
-    layout_botoes = Column([Row(botoes_opcoes[0:2], alignment=MainAxisAlignment.CENTER, spacing=15), Container(height=10), Row(botoes_opcoes[2:4], alignment=MainAxisAlignment.CENTER, spacing=15)], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=10)
-    conteudo_quiz = Column([texto_pergunta, Container(height=15), layout_botoes, Container(height=15), texto_feedback, Container(height=20), botao_proxima, Container(height=10), botao_voltar], alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, spacing=ESPACAMENTO_COLUNA_GERAL, scroll=ScrollMode.AUTO)
+    # Botão Voltar agora é tratado pela AppBar
+    # botao_voltar = ElevatedButton("Voltar ao Menu", on_click=lambda _: page.go("/"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Retornar à tela inicial.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
+    layout_botoes = Column(
+        [
+            Row(botoes_opcoes[0:2], alignment=MainAxisAlignment.CENTER, spacing=15),
+            Container(height=10),
+            Row(botoes_opcoes[2:4], alignment=MainAxisAlignment.CENTER, spacing=15)
+        ],
+        horizontal_alignment=CrossAxisAlignment.CENTER, spacing=10
+    )
+    conteudo_quiz = Column(
+        [
+            texto_pergunta,
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
+            layout_botoes,
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
+            texto_feedback,
+            Container(height=ESPACAMENTO_COLUNA_GERAL + 5),
+            botao_proxima,
+            # Container(height=10), botao_voltar # Removido
+        ],
+        alignment=MainAxisAlignment.CENTER,
+        horizontal_alignment=CrossAxisAlignment.CENTER,
+        spacing=ESPACAMENTO_COLUNA_GERAL,
+        scroll=ScrollMode.AUTO,
+        opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO
+    )
+    page.run_thread(target=lambda: (setattr(conteudo_quiz, "opacity", 1), page.update()))
 
     view_container = Container(content=conteudo_quiz, alignment=alignment.center, expand=True, padding=PADDING_VIEW)
     if tema_ativo_nome == "escuro_moderno":
@@ -1223,9 +1328,9 @@ def build_tela_quiz(page: Page):
     return view_container
 
 def build_tela_quiz_invertido(page: Page):
-    texto_pergunta_invertida = Text(size=30, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
+    texto_pergunta_invertida = Text(size=24, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
     botoes_opcoes_invertidas = [ElevatedButton(text="", width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
-    texto_feedback_invertido = Text(size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA)
+    texto_feedback_invertido = Text(size=16, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA)
     def handle_resposta_invertida(e, botao_clicado_ref, todos_botoes_opcoes_ref, txt_feedback_ctrl_ref, btn_proxima_ctrl_ref):
         dados_botao = botao_clicado_ref.data
         opcao_obj = dados_botao['opcao_obj']
@@ -1272,9 +1377,34 @@ def build_tela_quiz_invertido(page: Page):
         page_ref.update()
     botao_proxima_invertido.on_click = lambda _: carregar_nova_pergunta_invertida(page, texto_pergunta_invertida, botoes_opcoes_invertidas, texto_feedback_invertido, botao_proxima_invertido)
     carregar_nova_pergunta_invertida(page, texto_pergunta_invertida, botoes_opcoes_invertidas, texto_feedback_invertido, botao_proxima_invertido)
-    botao_voltar_inv = ElevatedButton("Voltar ao Menu", on_click=lambda _: page.go("/"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Retornar à tela inicial.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
-    layout_botoes_inv = Column([Row(botoes_opcoes_invertidas[0:2], alignment=MainAxisAlignment.CENTER, spacing=15), Container(height=10), Row(botoes_opcoes_invertidas[2:4], alignment=MainAxisAlignment.CENTER, spacing=15)], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=10)
-    conteudo_quiz_inv = Column([texto_pergunta_invertida, Container(height=15), layout_botoes_inv, Container(height=15), texto_feedback_invertido, Container(height=20), botao_proxima_invertido, Container(height=10), botao_voltar_inv], alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, spacing=ESPACAMENTO_COLUNA_GERAL, scroll=ScrollMode.AUTO)
+    # botao_voltar_inv = ElevatedButton("Voltar ao Menu", on_click=lambda _: page.go("/"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Retornar à tela inicial.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
+    layout_botoes_inv = Column(
+        [
+            Row(botoes_opcoes_invertidas[0:2], alignment=MainAxisAlignment.CENTER, spacing=15),
+            Container(height=10),
+            Row(botoes_opcoes_invertidas[2:4], alignment=MainAxisAlignment.CENTER, spacing=15)
+        ],
+        horizontal_alignment=CrossAxisAlignment.CENTER, spacing=10
+    )
+    conteudo_quiz_inv = Column(
+        [
+            texto_pergunta_invertida,
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
+            layout_botoes_inv,
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
+            texto_feedback_invertido,
+            Container(height=ESPACAMENTO_COLUNA_GERAL + 5),
+            botao_proxima_invertido,
+            # Container(height=10), botao_voltar_inv # Removido
+        ],
+        alignment=MainAxisAlignment.CENTER,
+        horizontal_alignment=CrossAxisAlignment.CENTER,
+        spacing=ESPACAMENTO_COLUNA_GERAL,
+        scroll=ScrollMode.AUTO,
+        opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO
+    )
+    page.run_thread(target=lambda: (setattr(conteudo_quiz_inv, "opacity", 1), page.update()))
+
 
     view_container = Container(content=conteudo_quiz_inv, alignment=alignment.center, expand=True, padding=PADDING_VIEW)
     if tema_ativo_nome == "escuro_moderno":
@@ -1287,17 +1417,26 @@ def build_tela_quiz_invertido(page: Page):
 
 def build_tela_treino(page: Page):
     tabuada_sugerida = sugerir_tabuada_para_treino()
-    titulo_treino = Text(f"Treinando a Tabuada do {tabuada_sugerida}", size=28, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"))
+    titulo_treino = Text(f"Treinando a Tabuada do {tabuada_sugerida}", size=26, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"))
     campos_tabuada_refs = []
-    coluna_itens_tabuada = Column(spacing=10, scroll=ScrollMode.AUTO, expand=True, horizontal_alignment=CrossAxisAlignment.CENTER)
+    coluna_itens_tabuada = Column(spacing=8, scroll=ScrollMode.AUTO, expand=True, horizontal_alignment=CrossAxisAlignment.CENTER) # spacing reduzido
     for i in range(1, 11):
         r_correta_val = tabuada_sugerida * i
-        txt_mult = Text(f"{tabuada_sugerida} x {i} = ", size=18, color=obter_cor_do_tema_ativo("texto_padrao"))
-        campo_resp = TextField(width=100, text_align=TextAlign.CENTER, data={'fator1': tabuada_sugerida, 'fator2': i, 'resposta_correta': r_correta_val}, keyboard_type=KeyboardType.NUMBER)
+        txt_mult = Text(f"{tabuada_sugerida} x {i} = ", size=16, color=obter_cor_do_tema_ativo("texto_padrao")) # Tamanho de texto padronizado
+        campo_resp = TextField(
+            width=100,
+            text_align=TextAlign.CENTER,
+            data={'fator1': tabuada_sugerida, 'fator2': i, 'resposta_correta': r_correta_val},
+            keyboard_type=KeyboardType.NUMBER,
+            border_color=obter_cor_do_tema_ativo("textfield_border_color"),
+            height=40 # Altura menor para campos
+        )
         campos_tabuada_refs.append(campo_resp)
-        coluna_itens_tabuada.controls.append(Row([txt_mult, campo_resp], alignment=MainAxisAlignment.CENTER, spacing=10))
-    txt_resumo = Text(size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_padrao"))
+        coluna_itens_tabuada.controls.append(Row([txt_mult, campo_resp], alignment=MainAxisAlignment.CENTER, spacing=8))
+
+    txt_resumo = Text(size=16, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_padrao"))
     btn_verificar = ElevatedButton("Verificar Respostas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Corrigir respostas.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
+
     def handle_verificar_treino(e):
         acertos = 0
         for campo in campos_tabuada_refs:
@@ -1305,17 +1444,53 @@ def build_tela_treino(page: Page):
             f1, f2, resp_esperada = dados['fator1'], dados['fator2'], dados['resposta_correta']
             acertou = False
             try:
-                if int(campo.value) == resp_esperada: acertos += 1; acertou = True; campo.border_color = obter_cor_do_tema_ativo("feedback_acerto_texto")
-                else: campo.border_color = obter_cor_do_tema_ativo("feedback_erro_texto")
-            except ValueError: campo.border_color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                if int(campo.value) == resp_esperada:
+                    acertos += 1
+                    acertou = True
+                    campo.border_color = obter_cor_do_tema_ativo("feedback_acerto_texto")
+                    campo.border_width = 2 # Destaque maior
+                else:
+                    campo.border_color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                    campo.border_width = 2
+            except ValueError:
+                campo.border_color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                campo.border_width = 2
             campo.disabled = True
             pergunta_ref = next((p for p in multiplicacoes_data if (p['fator1'] == f1 and p['fator2'] == f2) or (p['fator1'] == f2 and p['fator2'] == f1)), None)
             if pergunta_ref: registrar_resposta(pergunta_ref, acertou)
-        txt_resumo.value = f"Você acertou {acertos} de {len(campos_tabuada_refs)}!"; btn_verificar.disabled = True; page.update()
+        txt_resumo.value = f"Você acertou {acertos} de {len(campos_tabuada_refs)}!"
+        btn_verificar.disabled = True
+        page.update()
     btn_verificar.on_click = handle_verificar_treino
-    btn_voltar = ElevatedButton("Voltar ao Menu", on_click=lambda _: page.go("/"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Retornar à tela inicial.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
-    cont_tabuada = Container(content=coluna_itens_tabuada, border=border.all(2, obter_cor_do_tema_ativo("container_treino_borda")), border_radius=8, padding=padding.all(15), width=360, height=420, bgcolor=obter_cor_do_tema_ativo("container_treino_bg"))
-    conteudo_treino = Column([titulo_treino, Container(height=10), cont_tabuada, Container(height=10), btn_verificar, Container(height=10), txt_resumo, Container(height=15), btn_voltar], alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, spacing=ESPACAMENTO_COLUNA_GERAL, scroll=ScrollMode.AUTO)
+    # btn_voltar = ElevatedButton("Voltar ao Menu", on_click=lambda _: page.go("/"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Retornar à tela inicial.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
+
+    cont_tabuada = Container(
+        content=coluna_itens_tabuada,
+        border=border.all(2, obter_cor_do_tema_ativo("container_treino_borda")),
+        border_radius=10, # Aumentado
+        padding=padding.all(15),
+        width=380, # Aumentado
+        height=450, # Aumentado
+        bgcolor=obter_cor_do_tema_ativo("container_treino_bg")
+    )
+    conteudo_treino = Column(
+        [
+            titulo_treino,
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
+            cont_tabuada,
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
+            btn_verificar,
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
+            txt_resumo,
+            # Container(height=15), btn_voltar # Removido
+        ],
+        alignment=MainAxisAlignment.CENTER,
+        horizontal_alignment=CrossAxisAlignment.CENTER,
+        spacing=ESPACAMENTO_COLUNA_GERAL,
+        scroll=ScrollMode.AUTO,
+        opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO
+    )
+    page.run_thread(target=lambda: (setattr(conteudo_treino, "opacity", 1), page.update()))
 
     view_container = Container(content=conteudo_treino, alignment=alignment.center, expand=True, padding=PADDING_VIEW)
     if tema_ativo_nome == "escuro_moderno":
@@ -1329,14 +1504,16 @@ def build_tela_treino(page: Page):
 def build_tela_estatisticas(page: Page):
     stats_gerais = calcular_estatisticas_gerais()
     proficiencia_tabuadas = calcular_proficiencia_tabuadas()
+    data_atualizacao = time.strftime("%d/%m/%Y %H:%M", time.localtime()) # Para UX
+
     lista_proficiencia_controls = []
     for t in range(1, 11):
         progresso = proficiencia_tabuadas.get(t, 0) / 100.0
-        cor_barra_semantica = "feedback_acerto_texto" # Default to green (high proficiency)
-        if progresso < 0.4: # Low proficiency
-            cor_barra_semantica = "feedback_erro_texto" # Red
-        elif progresso < 0.7: # Medium proficiency
-            cor_barra_semantica = "progressbar_cor" # Theme's progress bar color (e.g., purple/blue)
+        cor_barra_semantica = "feedback_acerto_texto"
+        if progresso < 0.4:
+            cor_barra_semantica = "feedback_erro_texto"
+        elif progresso < 0.7:
+            cor_barra_semantica = "progressbar_cor"
 
         cor_barra_dinamica = obter_cor_do_tema_ativo(cor_barra_semantica)
         progressbar_bg_color_dinamica = obter_cor_do_tema_ativo("progressbar_bg_cor")
@@ -1344,56 +1521,63 @@ def build_tela_estatisticas(page: Page):
         lista_proficiencia_controls.append(
             Row(
                 [
-                    Text(f"Tabuada do {t}: ", size=16, color=obter_cor_do_tema_ativo("texto_padrao"), width=130),
-                    ProgressBar(value=progresso, width=150, color=cor_barra_dinamica, bgcolor=progressbar_bg_color_dinamica),
-                    Text(f"{proficiencia_tabuadas.get(t, 0):.1f}%", size=16, color=obter_cor_do_tema_ativo("texto_padrao"), width=60, text_align=TextAlign.RIGHT)
+                    Text(f"Tabuada do {t}: ", size=16, color=obter_cor_do_tema_ativo("texto_padrao"), width=140), # Largura ajustada
+                    ProgressBar(value=progresso, width=160, color=cor_barra_dinamica, bgcolor=progressbar_bg_color_dinamica, bar_height=10, border_radius=5), # Estilizado
+                    Text(f"{proficiencia_tabuadas.get(t, 0):.1f}%", size=16, color=obter_cor_do_tema_ativo("texto_padrao"), width=70, text_align=TextAlign.RIGHT) # Largura ajustada
                 ],
-                alignment=MainAxisAlignment.CENTER
+                alignment=MainAxisAlignment.CENTER,
+                spacing=8 # Espaçamento ajustado
             )
         )
 
-    col_prof = Column(controls=lista_proficiencia_controls, spacing=8, horizontal_alignment=CrossAxisAlignment.CENTER)
+    col_prof = Column(controls=lista_proficiencia_controls, spacing=10, horizontal_alignment=CrossAxisAlignment.CENTER) # Espaçamento aumentado
 
-    top_3_txt = [Text(item, size=16, color=obter_cor_do_tema_ativo("texto_padrao")) for item in stats_gerais['top_3_dificeis']]
-    if not top_3_txt:
-        top_3_txt = [Text("Nenhuma dificuldade registrada ainda!", size=16, color=obter_cor_do_tema_ativo("texto_padrao"))]
+    top_3_txt_controls = [Text(item, size=16, color=obter_cor_do_tema_ativo("texto_padrao")) for item in stats_gerais['top_3_dificeis']]
+    if not top_3_txt_controls:
+        top_3_txt_controls = [Text("Nenhuma dificuldade registrada ainda!", size=16, color=obter_cor_do_tema_ativo("texto_padrao"))]
 
-    col_dificuldades = Column(controls=top_3_txt, spacing=5, horizontal_alignment=CrossAxisAlignment.CENTER)
+    col_dificuldades = Column(controls=top_3_txt_controls, spacing=6, horizontal_alignment=CrossAxisAlignment.CENTER) # Espaçamento ajustado
 
     conteudo_stats = Column(
         controls=[
-            Text("Suas Estatísticas", size=32, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos"), text_align=TextAlign.CENTER),
-            Container(height=15),
-            Text(f"Total de Perguntas Respondidas: {stats_gerais['total_respondidas']}", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
-            Text(f"Percentual de Acertos Geral: {stats_gerais['percentual_acertos_geral']:.1f}%", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
-            Container(height=10),
+            Text("Suas Estatísticas", size=30, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos"), text_align=TextAlign.CENTER),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
+            Text(f"Total de Perguntas Respondidas: {stats_gerais['total_respondidas']}", size=16, color=obter_cor_do_tema_ativo("texto_padrao")),
+            Text(f"Percentual de Acertos Geral: {stats_gerais['percentual_acertos_geral']:.1f}%", size=16, color=obter_cor_do_tema_ativo("texto_padrao")),
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
             Container(
                 Text("Proficiência por Tabuada:", size=22, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
-                margin=ft.margin.only(top=20, bottom=10)
+                margin=ft.margin.only(top=15, bottom=10) # Ajustado
             ),
             col_prof,
-            Container(height=10),
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
             Container(
                 Text("Maiores Dificuldades Atuais:", size=22, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
-                margin=ft.margin.only(top=20, bottom=10)
+                margin=ft.margin.only(top=15, bottom=10) # Ajustado
             ),
             col_dificuldades,
-            Container(height=25),
-            ElevatedButton(
-                "Voltar ao Menu",
-                width=BOTAO_LARGURA_PRINCIPAL,
-                height=BOTAO_ALTURA_PRINCIPAL,
-                on_click=lambda _: page.go("/"),
-                tooltip="Retornar à tela inicial.",
-                bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"),
-                color=obter_cor_do_tema_ativo("botao_principal_texto")
-            ),
+            Container(height=ESPACAMENTO_COLUNA_GERAL + 5),
+            Text(f"Dados de {data_atualizacao}", size=12, color=obter_cor_do_tema_ativo("texto_padrao"), italic=True, opacity=0.7),
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
+            # Botão voltar é tratado pela AppBar
+            # ElevatedButton(
+            #     "Voltar ao Menu",
+            #     width=BOTAO_LARGURA_PRINCIPAL,
+            #     height=BOTAO_ALTURA_PRINCIPAL,
+            #     on_click=lambda _: page.go("/"),
+            #     tooltip="Retornar à tela inicial.",
+            #     bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"),
+            #     color=obter_cor_do_tema_ativo("botao_principal_texto")
+            # ),
         ],
         scroll=ScrollMode.AUTO,
         alignment=MainAxisAlignment.CENTER,
         horizontal_alignment=CrossAxisAlignment.CENTER,
-        spacing=ESPACAMENTO_COLUNA_GERAL
+        spacing=ESPACAMENTO_COLUNA_GERAL,
+        opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO
     )
+    page.run_thread(target=lambda: (setattr(conteudo_stats, "opacity", 1), page.update()))
+
     view_container = Container(content=conteudo_stats, alignment=alignment.center, expand=True, padding=PADDING_VIEW)
     if tema_ativo_nome == "escuro_moderno":
         view_container.gradient = obter_cor_do_tema_ativo("gradient_page_bg")
@@ -1409,15 +1593,15 @@ def build_tela_custom_quiz(page: Page):
 
     if current_custom_formula_for_quiz is None:
         error_content = Column([
-            Text("Erro: Nenhuma fórmula personalizada selecionada.", color=obter_cor_do_tema_ativo("feedback_erro_texto"), size=20),
-            ElevatedButton("Voltar para Seleção", on_click=lambda _: page.go("/custom_formula_setup"), bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
-        ], alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, spacing=20)
-        return Container(content=error_content, alignment=alignment.center, expand=True, padding=PADDING_VIEW)
+            Text("Erro: Nenhuma fórmula personalizada selecionada.", color=obter_cor_do_tema_ativo("feedback_erro_texto"), size=18), # Tamanho ajustado
+            ElevatedButton("Voltar para Seleção", on_click=lambda _: page.go("/formula_quiz_setup"), bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
+        ], alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, spacing=ESPACAMENTO_COLUNA_GERAL)
+        return Container(content=error_content, alignment=alignment.center, expand=True, padding=PADDING_VIEW, opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO) # Adicionado fade-in
 
     formula_obj = current_custom_formula_for_quiz
-    texto_pergunta = Text(size=24, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
+    texto_pergunta = Text(size=22, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) # Tamanho ajustado
     botoes_opcoes = [ElevatedButton(text="", width=BOTAO_LARGURA_OPCAO_QUIZ, height=BOTAO_ALTURA_OPCAO_QUIZ, opacity=0, animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO) for _ in range(4)]
-    texto_feedback = Text(size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA)
+    texto_feedback = Text(size=16, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, scale=0.8, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA) # Tamanho ajustado
 
     def generate_notable_formula_question_data(quiz_config):
         formula_id = quiz_config.get('formula_id')
@@ -1861,31 +2045,42 @@ def build_tela_custom_quiz(page: Page):
     botao_proxima.on_click = lambda _: carregar_nova_pergunta_custom(page, formula_obj, texto_pergunta, botoes_opcoes, texto_feedback, texto_lembrete_formula, botao_proxima, current_question_data_ref)
     carregar_nova_pergunta_custom(page, formula_obj, texto_pergunta, botoes_opcoes, texto_feedback, texto_lembrete_formula, botao_proxima, current_question_data_ref)
 
-    botao_voltar_setup = ElevatedButton("Mudar Config. / Menu", on_click=lambda _: page.go("/formula_quiz_setup"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
+    # botao_voltar_setup = ElevatedButton("Mudar Config. / Menu", on_click=lambda _: page.go("/formula_quiz_setup"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
+    # O botão de voltar é tratado pela AppBar agora. O botão "Mudar Config. / Menu" pode ser mantido se o fluxo desejado for explicitamente para a tela de setup.
+    # Para este exemplo, vamos remover e confiar na AppBar para voltar. Se um botão direto para o setup for necessário, ele pode ser re-adicionado.
 
-    layout_botoes = Column([Row(botoes_opcoes[0:2], alignment=MainAxisAlignment.CENTER, spacing=15), Container(height=10), Row(botoes_opcoes[2:4], alignment=MainAxisAlignment.CENTER, spacing=15)], horizontal_alignment=CrossAxisAlignment.CENTER, spacing=10)
+    layout_botoes = Column(
+        [
+            Row(botoes_opcoes[0:2], alignment=MainAxisAlignment.CENTER, spacing=15),
+            Container(height=10),
+            Row(botoes_opcoes[2:4], alignment=MainAxisAlignment.CENTER, spacing=15)
+        ],
+        horizontal_alignment=CrossAxisAlignment.CENTER, spacing=10
+    )
 
     conteudo_quiz = Column(
         [
             Text(f"Quiz Fórmula: {formula_obj['name']}", size=20, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos"), text_align=TextAlign.CENTER),
-            Container(height=5),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
             texto_pergunta,
-            Container(height=15),
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
             layout_botoes,
-            Container(height=15),
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
             texto_feedback,
-            Container(height=10),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
             texto_lembrete_formula,
-            Container(height=20),
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
             botao_proxima,
-            Container(height=10),
-            botao_voltar_setup
+            # Container(height=10), botao_voltar_setup # Removido
         ],
         alignment=MainAxisAlignment.CENTER,
         horizontal_alignment=CrossAxisAlignment.CENTER,
         spacing=ESPACAMENTO_COLUNA_GERAL,
-        scroll=ScrollMode.AUTO
+        scroll=ScrollMode.AUTO,
+        opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO
     )
+    page.run_thread(target=lambda: (setattr(conteudo_quiz, "opacity", 1), page.update()))
+
 
     view_container = Container(content=conteudo_quiz, alignment=alignment.center, expand=True, padding=PADDING_VIEW)
     if tema_ativo_nome == "escuro_moderno":
@@ -1903,37 +2098,40 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
         width=350,
         keyboard_type=KeyboardType.NUMBER,
         color=obter_cor_do_tema_ativo("texto_padrao"),
-        border_color=obter_cor_do_tema_ativo("textfield_border_color")
+        border_color=obter_cor_do_tema_ativo("textfield_border_color"),
+        height=45
     )
 
-    grandezas_column = Column(spacing=10, scroll=ScrollMode.AUTO, height=200)
-    resultados_column = Column(spacing=5, scroll=ScrollMode.AUTO, height=150)
-    feedback_text_divisao = Text("", color=obter_cor_do_tema_ativo("texto_padrao"), size=16)
+    grandezas_column = Column(spacing=8, scroll=ScrollMode.AUTO, height=180) # Ajustado height e spacing
+    resultados_column = Column(spacing=5, scroll=ScrollMode.AUTO, height=130) # Ajustado height
+    feedback_text_divisao = Text("", color=obter_cor_do_tema_ativo("texto_padrao"), size=14) # Tamanho ajustado
 
     def adicionar_campo_grandeza(e=None):
-        if len(grandezas_column.controls) >= 10: # Limite de 10 grandezas
-            feedback_text_divisao.value = "Limite de 10 grandezas atingido."
+        if len(grandezas_column.controls) >= 8: # Limite ajustado
+            feedback_text_divisao.value = "Limite de 8 grandezas atingido."
             feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
             page.update()
             return
 
         novo_nome_field = TextField(
-            label=f"Nome da Parte {len(grandezas_column.controls) + 1}",
-            width=160,
+            label=f"Nome Parte {len(grandezas_column.controls) + 1}",
+            width=150, # Ajustado
             color=obter_cor_do_tema_ativo("texto_padrao"),
-            border_color=obter_cor_do_tema_ativo("textfield_border_color")
+            border_color=obter_cor_do_tema_ativo("textfield_border_color"),
+            height=45
         )
         nova_grandeza_field = TextField(
-            label=f"Valor da Grandeza {len(grandezas_column.controls) + 1}",
-            width=160,
+            label=f"Grandeza {len(grandezas_column.controls) + 1}",
+            width=150, # Ajustado
             keyboard_type=KeyboardType.NUMBER,
             color=obter_cor_do_tema_ativo("texto_padrao"),
-            border_color=obter_cor_do_tema_ativo("textfield_border_color")
+            border_color=obter_cor_do_tema_ativo("textfield_border_color"),
+            height=45
         )
         grandezas_column.controls.append(
             Row([novo_nome_field, nova_grandeza_field], spacing=10, alignment=MainAxisAlignment.CENTER)
         )
-        feedback_text_divisao.value = "" # Limpa feedback anterior
+        feedback_text_divisao.value = ""
         page.update()
 
     def calcular_divisao_handler(e):
@@ -1943,6 +2141,7 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
             if not valor_total_str:
                 feedback_text_divisao.value = "Por favor, insira o Valor Total."
                 feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                 page.update()
                 return
 
@@ -1950,6 +2149,7 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
             if valor_total <= 0:
                 feedback_text_divisao.value = "O Valor Total deve ser positivo."
                 feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                 page.update()
                 return
 
@@ -1963,20 +2163,23 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
                     grandeza_str = grandeza_val_field.value
 
                     if not nome:
-                        feedback_text_divisao.value = f"Por favor, insira o Nome da Parte {i+1}."
+                        feedback_text_divisao.value = f"Insira o Nome da Parte {i+1}."
                         feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                        page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                         page.update()
                         return
                     if not grandeza_str:
-                        feedback_text_divisao.value = f"Por favor, insira o Valor da Grandeza {i+1}."
+                        feedback_text_divisao.value = f"Insira o Valor da Grandeza {i+1}."
                         feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                        page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                         page.update()
                         return
 
                     grandeza_valor = float(grandeza_str)
                     if grandeza_valor <= 0:
-                        feedback_text_divisao.value = f"O Valor da Grandeza {i+1} ('{nome}') deve ser positivo."
+                        feedback_text_divisao.value = f"Grandeza {i+1} ('{nome}') deve ser positiva."
                         feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                        page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                         page.update()
                         return
                     grandezas_input.append((nome, grandeza_valor))
@@ -1984,39 +2187,44 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
             if not grandezas_input:
                 feedback_text_divisao.value = "Adicione pelo menos uma grandeza."
                 feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                 page.update()
                 return
 
             resultado_calculo = calc_divisao_diretamente_proporcional(valor_total, grandezas_input)
 
-            if not resultado_calculo: # Caso de soma das grandezas ser zero
+            if not resultado_calculo:
                  feedback_text_divisao.value = "A soma das grandezas não pode ser zero."
                  feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                 page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
             else:
                 resultados_column.controls.append(
-                    Text("Resultados da Divisão:", weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos"))
+                    Text("Resultados da Divisão:", weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos"), size=16)
                 )
                 soma_partes = 0
                 for nome, parte in resultado_calculo.items():
                     resultados_column.controls.append(
-                        Text(f"{nome}: {parte:.2f}", color=obter_cor_do_tema_ativo("texto_padrao"))
+                        Text(f"{nome}: {parte:.2f}", color=obter_cor_do_tema_ativo("texto_padrao"), size=14)
                     )
                     soma_partes += parte
                 resultados_column.controls.append(
-                    Text(f"Soma das Partes: {soma_partes:.2f} (Original: {valor_total:.2f})", weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao"))
+                    Text(f"Soma das Partes: {soma_partes:.2f} (Original: {valor_total:.2f})", weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao"), size=14)
                 )
                 feedback_text_divisao.value = "Cálculo realizado com sucesso!"
                 feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_acerto_texto")
+                page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_acerto_texto")))
+
 
         except ValueError:
             feedback_text_divisao.value = "Erro: Verifique se todos os valores numéricos são válidos."
             feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+            page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
         except Exception as ex:
             feedback_text_divisao.value = f"Erro inesperado: {str(ex)}"
             feedback_text_divisao.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+            page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
         page.update()
 
-    # Adicionar campos iniciais para duas grandezas
     adicionar_campo_grandeza()
     adicionar_campo_grandeza()
 
@@ -2024,7 +2232,7 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
         "Adicionar Grandeza",
         icon=Icons.ADD_CIRCLE_OUTLINE,
         on_click=adicionar_campo_grandeza,
-        width=BOTAO_LARGURA_PRINCIPAL - 80, height=BOTAO_ALTURA_PRINCIPAL -10,
+        width=BOTAO_LARGURA_PRINCIPAL - 60, height=BOTAO_ALTURA_PRINCIPAL -15, # Ajustado
         bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"),
         color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
     )
@@ -2036,7 +2244,7 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
             grandezas_column.controls.pop() if len(grandezas_column.controls) > 1 else None,
             page.update()
         ),
-        width=BOTAO_LARGURA_PRINCIPAL - 80, height=BOTAO_ALTURA_PRINCIPAL -10,
+        width=BOTAO_LARGURA_PRINCIPAL - 60, height=BOTAO_ALTURA_PRINCIPAL -15, # Ajustado
         bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"),
         color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto"),
         disabled=len(grandezas_column.controls) <= 1
@@ -2045,63 +2253,67 @@ def build_tela_divisao_diretamente_proporcional(page: Page):
 
     calcular_button = ElevatedButton(
         "Calcular Divisão",
+        icon=ft.icons.CALCULATE_ROUNDED,
         on_click=calcular_divisao_handler,
         width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL,
         bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"),
         color=obter_cor_do_tema_ativo("botao_principal_texto")
     )
-    back_button = ElevatedButton(
-        "Voltar ao Menu",
-        on_click=lambda _: page.go("/"),
-        width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL,
-        bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"),
-        color=obter_cor_do_tema_ativo("botao_principal_texto")
-    )
+    # back_button = ElevatedButton( # Removido, AppBar trata
+    #     "Voltar ao Menu",
+    #     on_click=lambda _: page.go("/"),
+    #     width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL,
+    #     bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"),
+    #     color=obter_cor_do_tema_ativo("botao_principal_texto")
+    # )
 
     content = Column(
         controls=[
-            Text("Divisão Diretamente Proporcional", size=28, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
-            Container(height=10),
+            Text("Divisão Diretamente Proporcional", size=26, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
             valor_total_field,
-            Container(height=10),
-            Text("Insira as Partes e suas Grandezas:", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
+            Text("Insira as Partes e suas Grandezas:", size=16, color=obter_cor_do_tema_ativo("texto_padrao")),
             Container(
                 content=grandezas_column,
                 border=border.all(1, obter_cor_do_tema_ativo("textfield_border_color")),
-                border_radius=5,
+                border_radius=8, # Ajustado
                 padding=10,
-                margin=ft.margin.symmetric(vertical=5)
+                margin=ft.margin.symmetric(vertical=8) # Ajustado
             ),
             Row([add_grandeza_button, remove_grandeza_button], alignment=MainAxisAlignment.CENTER, spacing=10),
-            Container(height=15),
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
             calcular_button,
-            Container(height=10),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
             feedback_text_divisao,
-            Container(height=10),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
             Container(
                 content=resultados_column,
                 border=border.all(1, obter_cor_do_tema_ativo("textfield_border_color")),
-                border_radius=5,
+                border_radius=8, # Ajustado
                 padding=10,
-                margin=margin.symmetric(vertical=5),
-                visible= True # Sempre visível, mas conteúdo é dinâmico
+                margin=margin.symmetric(vertical=8), # Ajustado
+                visible= True
             ),
-            Container(height=15),
-            back_button,
+            # Container(height=15), back_button, # Removido
         ],
         scroll=ScrollMode.AUTO,
-        alignment=MainAxisAlignment.START, # Alinhar ao topo para melhor visualização com scroll
+        alignment=MainAxisAlignment.START,
         horizontal_alignment=CrossAxisAlignment.CENTER,
-        spacing=ESPACAMENTO_COLUNA_GERAL
+        spacing=ESPACAMENTO_COLUNA_GERAL,
+        opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO
     )
+    page.run_thread(target=lambda: (setattr(content, "opacity", 1), page.update()))
+
 
     # Atualizar estado do botão de remover
     def update_remove_button_state():
         remove_grandeza_button.disabled = len(grandezas_column.controls) <= 1
-        page.update()
+        if remove_grandeza_button.page: # Garante que o botão está na página
+             page.update()
 
-    grandezas_column.on_change = lambda _: update_remove_button_state() # Atualiza se a coluna mudar (adicionar/remover)
-    update_remove_button_state() # Estado inicial
+    grandezas_column.on_change = lambda _: update_remove_button_state()
+    update_remove_button_state()
 
 
     view_container = Container(content=content, alignment=alignment.center, expand=True, padding=PADDING_VIEW)
@@ -2120,32 +2332,35 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
         width=350,
         keyboard_type=KeyboardType.NUMBER,
         color=obter_cor_do_tema_ativo("texto_padrao"),
-        border_color=obter_cor_do_tema_ativo("textfield_border_color")
+        border_color=obter_cor_do_tema_ativo("textfield_border_color"),
+        height=45
     )
 
-    grandezas_column_inv = Column(spacing=10, scroll=ScrollMode.AUTO, height=200)
-    resultados_column_inv = Column(spacing=5, scroll=ScrollMode.AUTO, height=150)
-    feedback_text_divisao_inv = Text("", color=obter_cor_do_tema_ativo("texto_padrao"), size=16)
+    grandezas_column_inv = Column(spacing=8, scroll=ScrollMode.AUTO, height=180) # Ajustado
+    resultados_column_inv = Column(spacing=5, scroll=ScrollMode.AUTO, height=130) # Ajustado
+    feedback_text_divisao_inv = Text("", color=obter_cor_do_tema_ativo("texto_padrao"), size=14) # Ajustado
 
     def adicionar_campo_grandeza_inv(e=None):
-        if len(grandezas_column_inv.controls) >= 10: # Limite de 10 grandezas
-            feedback_text_divisao_inv.value = "Limite de 10 grandezas atingido."
+        if len(grandezas_column_inv.controls) >= 8: # Limite ajustado
+            feedback_text_divisao_inv.value = "Limite de 8 grandezas atingido."
             feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
             page.update()
             return
 
         novo_nome_field = TextField(
-            label=f"Nome da Parte {len(grandezas_column_inv.controls) + 1}",
-            width=160,
+            label=f"Nome Parte {len(grandezas_column_inv.controls) + 1}",
+            width=150, # Ajustado
             color=obter_cor_do_tema_ativo("texto_padrao"),
-            border_color=obter_cor_do_tema_ativo("textfield_border_color")
+            border_color=obter_cor_do_tema_ativo("textfield_border_color"),
+            height=45
         )
         nova_grandeza_field = TextField(
-            label=f"Valor da Grandeza {len(grandezas_column_inv.controls) + 1} (≠0)",
-            width=160,
+            label=f"Grandeza {len(grandezas_column_inv.controls) + 1} (≠0)",
+            width=150, # Ajustado
             keyboard_type=KeyboardType.NUMBER,
             color=obter_cor_do_tema_ativo("texto_padrao"),
-            border_color=obter_cor_do_tema_ativo("textfield_border_color")
+            border_color=obter_cor_do_tema_ativo("textfield_border_color"),
+            height=45
         )
         grandezas_column_inv.controls.append(
             Row([novo_nome_field, nova_grandeza_field], spacing=10, alignment=MainAxisAlignment.CENTER)
@@ -2160,6 +2375,7 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
             if not valor_total_str:
                 feedback_text_divisao_inv.value = "Por favor, insira o Valor Total."
                 feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                 page.update()
                 return
 
@@ -2167,6 +2383,7 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
             if valor_total <= 0:
                 feedback_text_divisao_inv.value = "O Valor Total deve ser positivo."
                 feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                 page.update()
                 return
 
@@ -2180,25 +2397,29 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
                     grandeza_str = grandeza_val_field.value
 
                     if not nome:
-                        feedback_text_divisao_inv.value = f"Por favor, insira o Nome da Parte {i+1}."
+                        feedback_text_divisao_inv.value = f"Insira o Nome da Parte {i+1}."
                         feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                        page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                         page.update()
                         return
                     if not grandeza_str:
-                        feedback_text_divisao_inv.value = f"Por favor, insira o Valor da Grandeza {i+1}."
+                        feedback_text_divisao_inv.value = f"Insira o Valor da Grandeza {i+1}."
                         feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                        page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                         page.update()
                         return
 
                     grandeza_valor = float(grandeza_str)
-                    if grandeza_valor == 0: # Para divisão inversa, grandeza não pode ser zero
-                        feedback_text_divisao_inv.value = f"O Valor da Grandeza {i+1} ('{nome}') não pode ser zero."
+                    if grandeza_valor == 0:
+                        feedback_text_divisao_inv.value = f"Grandeza {i+1} ('{nome}') não pode ser zero."
                         feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                        page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                         page.update()
                         return
-                    if grandeza_valor < 0: # Geralmente se usa grandezas positivas
-                         feedback_text_divisao_inv.value = f"O Valor da Grandeza {i+1} ('{nome}') deve ser positivo."
+                    if grandeza_valor < 0:
+                         feedback_text_divisao_inv.value = f"Grandeza {i+1} ('{nome}') deve ser positivo."
                          feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                         page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                          page.update()
                          return
                     grandezas_input.append((nome, grandeza_valor))
@@ -2206,36 +2427,42 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
             if not grandezas_input:
                 feedback_text_divisao_inv.value = "Adicione pelo menos uma grandeza."
                 feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
                 page.update()
                 return
 
             resultado_calculo = calc_divisao_inversamente_proporcional(valor_total, grandezas_input)
 
             if not resultado_calculo or any(val is None for val in resultado_calculo.values()):
-                 feedback_text_divisao_inv.value = "Erro no cálculo. Verifique se todas as grandezas são diferentes de zero."
+                 feedback_text_divisao_inv.value = "Erro no cálculo. Verifique grandezas ≠ 0."
                  feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+                 page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
             else:
                 resultados_column_inv.controls.append(
-                    Text("Resultados da Divisão Inversa:", weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos"))
+                    Text("Resultados da Divisão Inversa:", weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos"), size=16)
                 )
                 soma_partes = 0
                 for nome, parte in resultado_calculo.items():
                     resultados_column_inv.controls.append(
-                        Text(f"{nome}: {parte:.2f}", color=obter_cor_do_tema_ativo("texto_padrao"))
+                        Text(f"{nome}: {parte:.2f}", color=obter_cor_do_tema_ativo("texto_padrao"), size=14)
                     )
                     soma_partes += parte
                 resultados_column_inv.controls.append(
-                    Text(f"Soma das Partes: {soma_partes:.2f} (Original: {valor_total:.2f})", weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao"))
+                    Text(f"Soma das Partes: {soma_partes:.2f} (Original: {valor_total:.2f})", weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao"), size=14)
                 )
                 feedback_text_divisao_inv.value = "Cálculo realizado com sucesso!"
                 feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_acerto_texto")
+                page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_acerto_texto")))
+
 
         except ValueError:
             feedback_text_divisao_inv.value = "Erro: Verifique se todos os valores numéricos são válidos e grandezas ≠ 0."
             feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+            page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
         except Exception as ex:
             feedback_text_divisao_inv.value = f"Erro inesperado: {str(ex)}"
             feedback_text_divisao_inv.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+            page.show_snack_bar(ft.SnackBar(Text(feedback_text_divisao_inv.value), open=True, bgcolor=obter_cor_do_tema_ativo("feedback_erro_texto")))
         page.update()
 
     adicionar_campo_grandeza_inv()
@@ -2243,61 +2470,66 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
 
     add_grandeza_button_inv = ElevatedButton(
         "Adicionar Grandeza", icon=Icons.ADD_CIRCLE_OUTLINE, on_click=adicionar_campo_grandeza_inv,
-        width=BOTAO_LARGURA_PRINCIPAL - 80, height=BOTAO_ALTURA_PRINCIPAL -10,
+        width=BOTAO_LARGURA_PRINCIPAL - 60, height=BOTAO_ALTURA_PRINCIPAL -15, # Ajustado
         bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"), color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
     )
     remove_grandeza_button_inv = ElevatedButton(
         "Remover Última", icon=Icons.REMOVE_CIRCLE_OUTLINE,
         on_click=lambda _: (grandezas_column_inv.controls.pop() if len(grandezas_column_inv.controls) > 1 else None, page.update()),
-        width=BOTAO_LARGURA_PRINCIPAL - 80, height=BOTAO_ALTURA_PRINCIPAL -10,
+        width=BOTAO_LARGURA_PRINCIPAL - 60, height=BOTAO_ALTURA_PRINCIPAL -15, # Ajustado
         bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"), color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto"),
         disabled=len(grandezas_column_inv.controls) <= 1
     )
 
     calcular_button_inv = ElevatedButton(
-        "Calcular Divisão Inversa", on_click=calcular_divisao_handler_inv,
+        "Calcular Divisão Inversa",
+        icon=ft.icons.CALCULATE_ROUNDED,
+        on_click=calcular_divisao_handler_inv,
         width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL,
         bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")
     )
-    back_button_inv = ElevatedButton(
-        "Voltar ao Menu", on_click=lambda _: page.go("/"),
-        width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL,
-        bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")
-    )
+    # back_button_inv = ElevatedButton( # Removido
+    #     "Voltar ao Menu", on_click=lambda _: page.go("/"),
+    #     width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL,
+    #     bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")
+    # )
 
     content_inv = Column(
         controls=[
-            Text("Divisão Inversamente Proporcional", size=28, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
-            Container(height=10),
+            Text("Divisão Inversamente Proporcional", size=26, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
             valor_total_field_inv,
-            Container(height=10),
-            Text("Insira as Partes e suas Grandezas (valores ≠ 0):", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
+            Text("Insira as Partes e suas Grandezas (valores ≠ 0):", size=16, color=obter_cor_do_tema_ativo("texto_padrao")),
             Container(
                 content=grandezas_column_inv,
                 border=border.all(1, obter_cor_do_tema_ativo("textfield_border_color")),
-                border_radius=5, padding=10, margin=ft.margin.symmetric(vertical=5)
+                border_radius=8, padding=10, margin=ft.margin.symmetric(vertical=8) # Ajustado
             ),
             Row([add_grandeza_button_inv, remove_grandeza_button_inv], alignment=MainAxisAlignment.CENTER, spacing=10),
-            Container(height=15),
+            Container(height=ESPACAMENTO_COLUNA_GERAL),
             calcular_button_inv,
-            Container(height=10),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
             feedback_text_divisao_inv,
-            Container(height=10),
+            Container(height=ESPACAMENTO_COLUNA_GERAL / 2),
             Container(
                 content=resultados_column_inv,
                 border=border.all(1, obter_cor_do_tema_ativo("textfield_border_color")),
-                border_radius=5, padding=10, margin=margin.symmetric(vertical=5)
+                border_radius=8, padding=10, margin=margin.symmetric(vertical=8) # Ajustado
             ),
-            Container(height=15),
-            back_button_inv,
+            # Container(height=15), back_button_inv, # Removido
         ],
         scroll=ScrollMode.AUTO, alignment=MainAxisAlignment.START,
-        horizontal_alignment=CrossAxisAlignment.CENTER, spacing=ESPACAMENTO_COLUNA_GERAL
+        horizontal_alignment=CrossAxisAlignment.CENTER, spacing=ESPACAMENTO_COLUNA_GERAL,
+        opacity=0, animate_opacity=ANIMACAO_FADE_IN_LENTO
     )
+    page.run_thread(target=lambda: (setattr(content_inv, "opacity", 1), page.update()))
+
 
     def update_remove_button_state_inv():
         remove_grandeza_button_inv.disabled = len(grandezas_column_inv.controls) <= 1
-        page.update()
+        if remove_grandeza_button_inv.page: # Garante que o botão está na página
+            page.update()
     grandezas_column_inv.on_change = lambda _: update_remove_button_state_inv()
     update_remove_button_state_inv()
 
@@ -2435,9 +2667,36 @@ def main(page: Page):
     page.on_route_change = route_change
     page.on_view_pop = view_pop
 
+    # Garante que a AppBar seja construída inicialmente com o tema correto
+    # e que os elementos de UI de atualização sejam inicializados.
+    # Isso é importante porque route_change pode não ser chamado imediatamente no início
+    # se a rota inicial for "/", e a AppBar precisa estar pronta.
+
+    # Inicializa a AppBar para a primeira carga
+    app_bar_inicial = ft.AppBar(
+        title=Text("Quiz Mestre da Tabuada", color=obter_cor_do_tema_ativo("texto_titulos"), size=20, weight=FontWeight.BOLD),
+        center_title=True,
+        bgcolor=obter_cor_do_tema_ativo("fundo_pagina"),
+        leading_width=50, # Espaço para o botão de voltar, mesmo que não visível na home
+        actions=[
+            Row([
+                update_status_icon,
+                Container(width=5),
+                update_status_text,
+                Container(width=10)
+            ], alignment=MainAxisAlignment.CENTER, vertical_alignment=CrossAxisAlignment.CENTER),
+        ]
+    )
+    page.appbar = app_bar_inicial
+
+    # Iniciar a verificação de atualização e UI refresh em uma thread
+    # para não bloquear a renderização inicial da página.
+    # A função run_update_check_and_ui_refresh já contém page.update()
     update_thread = threading.Thread(target=run_update_check_and_ui_refresh, args=(page,), daemon=True)
     update_thread.start()
 
+    # A primeira navegação para "/" irá disparar route_change,
+    # que por sua vez chamará update_ui_elements_for_update_status.
     page.go("/")
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from flet import (
     Page, Text, ElevatedButton, Row, Column, TextField, View, Container, Dropdown,
     MainAxisAlignment, CrossAxisAlignment, FontWeight, alignment,
     TextAlign, ScrollMode, padding, border, KeyboardType,
-    Animation, AnimationCurve, ProgressBar, Icons, LinearGradient
+    Animation, AnimationCurve, ProgressBar, Icons, LinearGradient, colors
 )
 import random
 import time
@@ -748,18 +748,18 @@ TEMAS = {
         "botao_opcao_quiz_texto": ft.Colors.WHITE,
         "botao_destaque_bg": ft.Colors.TEAL_ACCENT_400,
         "botao_destaque_texto": ft.Colors.WHITE,
-        "botao_tema_bg": ft.with_opacity(0.2, ft.Colors.WHITE), # For theme selection buttons
+        "botao_tema_bg": ft.colors.with_opacity(0.2, ft.Colors.WHITE), # For theme selection buttons
         "botao_tema_texto": ft.Colors.CYAN_ACCENT_100,                 # For theme selection buttons text
         "feedback_acerto_texto": ft.Colors.GREEN_ACCENT_200,
         "feedback_erro_texto": ft.Colors.RED_ACCENT_100,
-        "feedback_acerto_botao_bg": ft.Colors.with_opacity(0.3, ft.Colors.GREEN_ACCENT_100),
-        "feedback_erro_botao_bg": ft.Colors.with_opacity(0.3, ft.Colors.RED_ACCENT_100),
-        "container_treino_bg": ft.Colors.with_opacity(0.1, ft.Colors.WHITE), # Slightly more subtle frosted glass
+        "feedback_acerto_botao_bg": ft.colors.with_opacity(0.3, ft.Colors.GREEN_ACCENT_100),
+        "feedback_erro_botao_bg": ft.colors.with_opacity(0.3, ft.Colors.RED_ACCENT_100),
+        "container_treino_bg": ft.colors.with_opacity(0.1, ft.Colors.WHITE), # Slightly more subtle frosted glass
         "container_treino_borda": ft.Colors.CYAN_ACCENT_700,
         "textfield_border_color": ft.Colors.CYAN_ACCENT_700,
         "dropdown_border_color": ft.Colors.CYAN_ACCENT_700,
         "progressbar_cor": ft.Colors.CYAN_ACCENT_400,
-        "progressbar_bg_cor": ft.Colors.with_opacity(0.2, ft.Colors.WHITE),
+        "progressbar_bg_cor": ft.colors.with_opacity(0.2, ft.Colors.WHITE),
         "update_icon_color_available": ft.Colors.YELLOW_ACCENT_400,
         "update_icon_color_uptodate": ft.Colors.GREEN_ACCENT_400,
         "update_icon_color_error": ft.Colors.RED_ACCENT_400
@@ -2322,20 +2322,28 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
 def main(page: Page):
     global tema_ativo_nome, multiplicacoes_data, custom_formulas_data
 
-    # Carregar configuração salva
+    # Carrega a configuração. Se não existir, o config.py cria um arquivo padrão.
     tema_salvo, multiplicacoes_salvas, formulas_salvas = carregar_configuracao()
 
+    # Define o tema. Usa o tema salvo ou o padrão "colorido".
     if tema_salvo and tema_salvo in TEMAS:
         tema_ativo_nome = tema_salvo
-    # Se não houver tema salvo, o default "colorido" será usado
+    else:
+        tema_ativo_nome = "colorido" # Garante um fallback se o tema salvo for inválido
 
+    # Carrega as fórmulas personalizadas. Começa com uma lista vazia se não houver dados.
     if formulas_salvas is not None:
         custom_formulas_data = formulas_salvas
+    else:
+        custom_formulas_data = []
 
+    # Carrega os dados de multiplicação. Se não houver, inicializa-os.
     if multiplicacoes_salvas is not None:
         multiplicacoes_data = multiplicacoes_salvas
     else:
-        inicializar_multiplicacoes() # Inicializa apenas se não houver dados salvos
+        inicializar_multiplicacoes() # Cria os dados de tabuada pela primeira vez
+        # Salva a configuração inicial para que os dados da tabuada persistam
+        salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data)
 
     page.title = "Quiz Mestre da Tabuada"
     page.vertical_alignment = MainAxisAlignment.CENTER

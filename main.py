@@ -13,6 +13,7 @@ import subprocess
 import threading
 import os # Adicionado para manipulação de caminhos
 import math # Adicionado para ceil e floor
+from config import salvar_configuracao, carregar_configuracao
 
 # --- Definições das Fórmulas Notáveis (Integrado de formula_definitions.py) ---
 
@@ -349,6 +350,7 @@ def selecionar_proxima_pergunta():
     return random.choices(perguntas_originais_refs, weights=prioridades, k=1)[0]
 
 def registrar_resposta(pergunta_selecionada_ref, acertou: bool):
+    global tema_ativo_nome, multiplicacoes_data, custom_formulas_data
     if not pergunta_selecionada_ref: return
     pergunta_selecionada_ref['vezes_apresentada'] += 1
     pergunta_selecionada_ref['ultima_vez_apresentada_ts'] = time.time()
@@ -359,6 +361,8 @@ def registrar_resposta(pergunta_selecionada_ref, acertou: bool):
         pergunta_selecionada_ref['peso'] = max(1.0, pergunta_selecionada_ref['peso'] * 0.7)
     else:
         pergunta_selecionada_ref['peso'] = min(100.0, pergunta_selecionada_ref['peso'] * 1.6)
+
+    salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data)
 
 def gerar_opcoes(fator1: int, fator2: int, todas_multiplicacoes_data_ref):
     resposta_correta = fator1 * fator2
@@ -484,7 +488,7 @@ def calcular_proficiencia_tabuadas():
 
     return proficiencia_por_tabuada
 
-inicializar_multiplicacoes()
+# A inicialização agora é feita dentro da função main, após carregar a configuração
 
 # --- Armazenamento de Fórmulas Personalizadas ---
 custom_formulas_data = [] # Lista para armazenar as fórmulas personalizadas
@@ -785,14 +789,14 @@ ANIMACAO_FEEDBACK_ESCALA = Animation(300, AnimationCurve.EASE_OUT_BACK)
 
 # --- Funções de Construção de Tela ---
 def mudar_tema(page: Page, novo_tema_nome: str):
-    global tema_ativo_nome
+    global tema_ativo_nome, multiplicacoes_data, custom_formulas_data
     if tema_ativo_nome == novo_tema_nome:
         return
 
     tema_ativo_nome = novo_tema_nome
 
-    if page.client_storage:
-        page.client_storage.set("tema_preferido_quiz_tabuada", novo_tema_nome)
+    # Salva a configuração toda vez que o tema muda
+    salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data)
 
     page.bgcolor = obter_cor_do_tema_ativo("fundo_pagina")
 
@@ -1008,6 +1012,7 @@ def build_tela_formula_quiz_setup(page: Page):
             'ranges': ranges
         }
         custom_formulas_data.append(quiz_config_entry)
+        salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data)
         feedback_text.value = f"Configuração de Quiz '{config_name}' salva!"
         feedback_text.color = obter_cor_do_tema_ativo("feedback_acerto_texto")
 
@@ -1299,6 +1304,7 @@ def build_tela_treino(page: Page):
     txt_resumo = Text(size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_padrao"))
     btn_verificar = ElevatedButton("Verificar Respostas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Corrigir respostas.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
     def handle_verificar_treino(e):
+        global tema_ativo_nome, multiplicacoes_data, custom_formulas_data
         acertos = 0
         for campo in campos_tabuada_refs:
             dados = campo.data
@@ -1311,7 +1317,9 @@ def build_tela_treino(page: Page):
             campo.disabled = True
             pergunta_ref = next((p for p in multiplicacoes_data if (p['fator1'] == f1 and p['fator2'] == f2) or (p['fator1'] == f2 and p['fator2'] == f1)), None)
             if pergunta_ref: registrar_resposta(pergunta_ref, acertou)
-        txt_resumo.value = f"Você acertou {acertos} de {len(campos_tabuada_refs)}!"; btn_verificar.disabled = True; page.update()
+        txt_resumo.value = f"Você acertou {acertos} de {len(campos_tabuada_refs)}!"; btn_verificar.disabled = True
+        salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data)
+        page.update()
     btn_verificar.on_click = handle_verificar_treino
     btn_voltar = ElevatedButton("Voltar ao Menu", on_click=lambda _: page.go("/"), width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, tooltip="Retornar à tela inicial.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
     cont_tabuada = Container(content=coluna_itens_tabuada, border=border.all(2, obter_cor_do_tema_ativo("container_treino_borda")), border_radius=8, padding=padding.all(15), width=360, height=420, bgcolor=obter_cor_do_tema_ativo("container_treino_bg"))
@@ -2312,11 +2320,22 @@ def build_tela_divisao_inversamente_proporcional(page: Page):
 
 # --- Configuração Principal da Página e Rotas ---
 def main(page: Page):
-    global tema_ativo_nome
-    if page.client_storage:
-        tema_salvo = page.client_storage.get("tema_preferido_quiz_tabuada")
-        if tema_salvo and tema_salvo in TEMAS:
-            tema_ativo_nome = tema_salvo
+    global tema_ativo_nome, multiplicacoes_data, custom_formulas_data
+
+    # Carregar configuração salva
+    tema_salvo, multiplicacoes_salvas, formulas_salvas = carregar_configuracao()
+
+    if tema_salvo and tema_salvo in TEMAS:
+        tema_ativo_nome = tema_salvo
+    # Se não houver tema salvo, o default "colorido" será usado
+
+    if formulas_salvas is not None:
+        custom_formulas_data = formulas_salvas
+
+    if multiplicacoes_salvas is not None:
+        multiplicacoes_data = multiplicacoes_salvas
+    else:
+        inicializar_multiplicacoes() # Inicializa apenas se não houver dados salvos
 
     page.title = "Quiz Mestre da Tabuada"
     page.vertical_alignment = MainAxisAlignment.CENTER
@@ -2434,6 +2453,16 @@ def main(page: Page):
 
     page.on_route_change = route_change
     page.on_view_pop = view_pop
+
+    def window_event_handler(e):
+        if e.data == "close":
+            # Garante que o estado mais recente seja salvo ao fechar
+            salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data)
+            page.window_destroy()
+
+    page.on_window_event = window_event_handler
+    page.window_prevent_close = True
+
 
     update_thread = threading.Thread(target=run_update_check_and_ui_refresh, args=(page,), daemon=True)
     update_thread.start()

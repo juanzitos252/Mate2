@@ -748,7 +748,7 @@ TEMAS = {
         "botao_opcao_quiz_texto": ft.Colors.WHITE,
         "botao_destaque_bg": ft.Colors.TEAL_ACCENT_400,
         "botao_destaque_texto": ft.Colors.WHITE,
-        "botao_tema_bg": ft.Colors.with_opacity(0.2, ft.Colors.WHITE), # For theme selection buttons
+        "botao_tema_bg": ft.with_opacity(0.2, ft.Colors.WHITE), # For theme selection buttons
         "botao_tema_texto": ft.Colors.CYAN_ACCENT_100,                 # For theme selection buttons text
         "feedback_acerto_texto": ft.Colors.GREEN_ACCENT_200,
         "feedback_erro_texto": ft.Colors.RED_ACCENT_100,

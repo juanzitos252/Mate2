@@ -577,22 +577,38 @@ def perform_update_action(e, page_ref: ft.Page, dialog_ref: ft.AlertDialog):
         fetch_result = subprocess.run(['git', 'fetch'], check=True, capture_output=True, text=True)
         print(f"Git fetch executado: {fetch_result.stdout}")
 
-        update_dialog_content_text.value = "Aplicando atualizações (pull --ff-only)..."
+        update_dialog_content_text.value = "Aplicando atualizações (git pull)..."
         if page_ref: page_ref.update()
-        pull_result = subprocess.run(['git', 'pull', '--ff-only'], capture_output=True, text=True)
+        pull_result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
 
         if pull_result.returncode != 0:
-            if "fatal: Not possible to fast-forward, aborting." in pull_result.stderr or \
-               "Your local changes to the following files would be overwritten by merge" in pull_result.stderr:
+            # Verifica se o pull falhou devido a arquivos não rastreados que seriam sobrescritos
+            if "Your local changes to the following files would be overwritten by merge" in pull_result.stderr or \
+               "The following untracked working tree files would be overwritten by merge" in pull_result.stderr:
                 update_dialog_content_text.value = (
-                    "ERRO: Não foi possível aplicar as atualizações automaticamente (fast-forward falhou). "
-                    "Isso pode ser devido a commits locais divergentes. "
-                    "Por favor, atualize manualmente usando 'git pull' no terminal e resolva quaisquer conflitos."
+                    "ERRO: A atualização falhou porque você tem alterações locais ou arquivos não rastreados "
+                    "que entrariam em conflito com a atualização. Por favor, salve suas alterações (usando 'git stash' ou 'git commit') "
+                    "e tente novamente. Se o problema persistir, use 'git pull' no terminal para resolver manualmente."
                 )
+            # Verifica se o pull falhou devido a um conflito de merge
+            elif "CONFLICT" in pull_result.stdout or "Automatic merge failed" in pull_result.stderr:
+                update_dialog_content_text.value = (
+                    "ERRO: Ocorreu um conflito de merge durante a atualização. "
+                    "Isso significa que suas alterações locais e as alterações remotas não puderam ser combinadas automaticamente. "
+                    "Por favor, resolva os conflitos manualmente usando 'git status' e 'git mergetool' ou editando os arquivos, "
+                    "e então finalize o merge com 'git commit'."
+                )
+                # O 'git pull' com conflito já deixa o repositório em um estado de merge,
+                # então a melhor ação é informar o usuário. Tentar 'git stash pop' aqui seria problemático.
+                # O stash original (se houve) permanece intacto.
             else:
+                # Outros erros de git pull
                 update_dialog_content_text.value = f"ERRO ao aplicar atualizações (git pull): {pull_result.stderr or pull_result.stdout}"
-            # Tentar restaurar o stash em caso de falha no pull
-            subprocess.run(['git', 'stash', 'pop'], capture_output=True, text=True) # Melhor esforço
+
+            # Em caso de falha no pull (exceto conflito de merge que requer ação manual), tentamos restaurar o stash.
+            if "CONFLICT" not in pull_result.stdout:
+                subprocess.run(['git', 'stash', 'pop'], capture_output=True, text=True) # Melhor esforço
+
             raise subprocess.CalledProcessError(pull_result.returncode, pull_result.args, output=pull_result.stdout, stderr=pull_result.stderr)
         print(f"Git pull executado: {pull_result.stdout}")
 
@@ -763,6 +779,32 @@ TEMAS = {
         "update_icon_color_available": ft.Colors.YELLOW_ACCENT_400,
         "update_icon_color_uptodate": ft.Colors.GREEN_ACCENT_400,
         "update_icon_color_error": ft.Colors.RED_ACCENT_400
+    },
+    "dark": {
+    "fundo_pagina": "#121212",
+    "texto_titulos": "#FFFFFF",
+    "texto_padrao": "#E0E0E0",
+    "botao_principal_bg": "#BB86FC",
+    "botao_principal_texto": "#000000",
+    "botao_opcao_quiz_bg": "#03DAC6",
+    "botao_opcao_quiz_texto": "#000000",
+    "botao_destaque_bg": "#03DAC6",
+    "botao_destaque_texto": "#000000",
+    "botao_tema_bg": "#1F1F1F",
+    "botao_tema_texto": "#FFFFFF",
+    "feedback_acerto_texto": "#00C853",
+    "feedback_erro_texto": "#FF4081",
+    "feedback_acerto_botao_bg": "#33691E",
+    "feedback_erro_botao_bg": "#D81B60",
+    "container_treino_bg": "#1E1E1E",
+    "container_treino_borda": "#BB86FC",
+    "textfield_border_color": "#BB86FC",
+    "dropdown_border_color": "#03DAC6",
+    "progressbar_cor": "#BB86FC",
+    "progressbar_bg_cor": "#3E3E3E",
+    "update_icon_color_available": "#FFD600",
+    "update_icon_color_uptodate": "#00E676",
+    "update_icon_color_error": "#FF1744"
     }
 }
 tema_ativo_nome = "colorido" # Default theme
@@ -1122,6 +1164,7 @@ def build_tela_apresentacao(page: Page):
                 ElevatedButton(text="Colorido", on_click=lambda _: mudar_tema(page, "colorido"), width=BOTAO_LARGURA_PRINCIPAL/2 - 5, height=BOTAO_ALTURA_PRINCIPAL-10, bgcolor=obter_cor_do_tema_ativo("botao_tema_bg"), color=obter_cor_do_tema_ativo("botao_tema_texto")),
                 ElevatedButton(text="Claro", on_click=lambda _: mudar_tema(page, "claro"), width=BOTAO_LARGURA_PRINCIPAL/2 - 5, height=BOTAO_ALTURA_PRINCIPAL-10, bgcolor=obter_cor_do_tema_ativo("botao_tema_bg"), color=obter_cor_do_tema_ativo("botao_tema_texto")),
                 ElevatedButton(text="Escuro Moderno", on_click=lambda _: mudar_tema(page, "escuro_moderno"), width=BOTAO_LARGURA_PRINCIPAL/2 - 5, height=BOTAO_ALTURA_PRINCIPAL-10, bgcolor=obter_cor_do_tema_ativo("botao_tema_bg"), color=obter_cor_do_tema_ativo("botao_tema_texto")),
+                ElevatedButton(text="Dark", on_click=lambda _: mudar_tema(page, "dark"), width=BOTAO_LARGURA_PRINCIPAL/2 - 5, height=BOTAO_ALTURA_PRINCIPAL-10, bgcolor=obter_cor_do_tema_ativo("botao_tema_bg"), color=obter_cor_do_tema_ativo("botao_tema_texto")),
             ],
             alignment=MainAxisAlignment.CENTER,
             spacing = 10

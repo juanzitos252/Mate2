@@ -488,6 +488,41 @@ def calcular_proficiencia_tabuadas():
 
     return proficiencia_por_tabuada
 
+def gerar_dados_heatmap():
+    """
+    Gera uma matriz 10x10 com a pontuação de dificuldade para cada multiplicação.
+    A pontuação é baseada no 'peso' do item de multiplicação.
+    Retorna a matriz e os pesos mínimo e máximo encontrados para normalização.
+    """
+    global multiplicacoes_data
+    if not multiplicacoes_data:
+        return [[0]*10 for _ in range(10)], 1.0, 10.0 # Retorna matriz de zeros se não houver dados
+
+    # Inicializa a matriz do heatmap com um valor padrão (peso inicial)
+    heatmap_data = [[10.0]*10 for _ in range(10)]
+    min_peso, max_peso = float('inf'), float('-inf')
+
+    # Cria um dicionário para acesso rápido aos itens de multiplicação
+    data_dict = {(item['fator1'], item['fator2']): item for item in multiplicacoes_data}
+
+    for i in range(1, 11):
+        for j in range(1, 11):
+            # Procura pelo item (i, j) ou (j, i)
+            item = data_dict.get((i, j), data_dict.get((j, i)))
+            if item:
+                peso = item['peso']
+                heatmap_data[i-1][j-1] = peso
+                if peso < min_peso:
+                    min_peso = peso
+                if peso > max_peso:
+                    max_peso = peso
+
+    # Caso nenhum item tenha sido apresentado, min e max podem não ter sido atualizados
+    if min_peso == float('inf'): min_peso = 1.0
+    if max_peso == float('-inf'): max_peso = 10.0
+
+    return heatmap_data, min_peso, max_peso
+
 # A inicialização agora é feita dentro da função main, após carregar a configuração
 
 # --- Armazenamento de Fórmulas Personalizadas ---
@@ -1337,6 +1372,106 @@ def build_tela_treino(page: Page):
 def build_tela_estatisticas(page: Page):
     stats_gerais = calcular_estatisticas_gerais()
     proficiencia_tabuadas = calcular_proficiencia_tabuadas()
+    heatmap_data, min_peso, max_peso = gerar_dados_heatmap()
+
+    # --- Lógica de Cores para o Heatmap ---
+    # --- Lógica de Cores para o Heatmap ---
+    # Valores RGB para as cores do gradiente
+    RGB_FACIL = (129, 199, 132)  # Cor correspondente a GREEN_300
+    RGB_MEDIO = (255, 241, 118)  # Cor correspondente a YELLOW_300
+    RGB_DIFICIL = (239, 83, 80)   # Cor correspondente a RED_400
+
+    def interpolar_cor_rgb(valor, min_val, max_val, cor_inicio_rgb, cor_meio_rgb, cor_fim_rgb):
+        """Interpola linearmente entre três cores usando seus valores RGB."""
+        if min_val >= max_val: # Evita divisão por zero e normalização inválida
+            return f"#{cor_meio_rgb[0]:02x}{cor_meio_rgb[1]:02x}{cor_meio_rgb[2]:02x}"
+
+        percentual = (valor - min_val) / (max_val - min_val)
+        percentual = max(0, min(1, percentual))
+
+        if percentual < 0.5:
+            p = percentual * 2
+            r1, g1, b1 = cor_inicio_rgb
+            r2, g2, b2 = cor_meio_rgb
+        else:
+            p = (percentual - 0.5) * 2
+            r1, g1, b1 = cor_meio_rgb
+            r2, g2, b2 = cor_fim_rgb
+
+        r = int(r1 + p * (r2 - r1))
+        g = int(g1 + p * (g2 - g1))
+        b = int(b1 + p * (b2 - b1))
+
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    # Constantes de cor para a legenda (usando a API do Flet)
+    COR_FACIL = ft.Colors.GREEN_300
+    COR_MEDIO = ft.Colors.YELLOW_300
+    COR_DIFICIL = ft.Colors.RED_400
+
+    # --- Construção da Grade do Heatmap ---
+    heatmap_grid = Column(spacing=2, horizontal_alignment=CrossAxisAlignment.CENTER)
+    # Adiciona a linha de cabeçalho (números 1 a 10)
+    header_row = Row(spacing=2)
+    header_row.controls.append(Container(width=28, height=28)) # Canto vazio
+    for j in range(1, 11):
+        header_row.controls.append(
+            Container(
+                content=Text(str(j), size=12, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao")),
+                width=28, height=28, alignment=alignment.center
+            )
+        )
+    heatmap_grid.controls.append(header_row)
+
+
+    for i in range(10): # Linhas 0-9 (representam 1-10)
+        row = Row(spacing=2)
+        # Adiciona o cabeçalho da linha (número da tabuada)
+        row.controls.append(
+            Container(
+                content=Text(str(i + 1), size=12, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_padrao")),
+                width=28, height=28, alignment=alignment.center
+            )
+        )
+        for j in range(10): # Colunas 0-9 (representam 1-10)
+            peso = heatmap_data[i][j]
+            # Normalização invertida: peso alto (difícil) tem cor "quente" (vermelho)
+            cor_fundo = interpolar_cor_rgb(peso, min_peso, max_peso, RGB_FACIL, RGB_MEDIO, RGB_DIFICIL)
+            celula = Container(
+                width=28,
+                height=28,
+                bgcolor=cor_fundo,
+                border_radius=3,
+                tooltip=f"Dificuldade de {i+1} x {j+1}: {peso:.2f}",
+                # Adiciona um leve brilho ao passar o mouse
+                on_hover=lambda e: (
+                    setattr(e.control.shadow, 'blur_radius', 15 if e.data == "true" else None),
+                    setattr(e.control.shadow, 'color', ft.Colors.with_opacity(0.5, cor_fundo) if e.data == "true" else None),
+                    e.control.update()
+                ),
+                shadow=ft.BoxShadow()
+            )
+            row.controls.append(celula)
+        heatmap_grid.controls.append(row)
+
+    # --- Legenda do Heatmap ---
+    legenda_heatmap = Row(
+        controls=[
+            Text("Fácil", color=COR_FACIL),
+            Container(
+                width=150, height=10,
+                gradient=ft.LinearGradient(
+                    begin=alignment.center_left,
+                    end=alignment.center_right,
+                    colors=[COR_FACIL, COR_MEDIO, COR_DIFICIL]
+                ),
+                border_radius=5
+            ),
+            Text("Difícil", color=COR_DIFICIL)
+        ],
+        spacing=10, alignment=MainAxisAlignment.CENTER
+    )
+
     lista_proficiencia_controls = []
     for t in range(1, 11):
         progresso = proficiencia_tabuadas.get(t, 0) / 100.0
@@ -1374,7 +1509,24 @@ def build_tela_estatisticas(page: Page):
             Container(height=15),
             Text(f"Total de Perguntas Respondidas: {stats_gerais['total_respondidas']}", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
             Text(f"Percentual de Acertos Geral: {stats_gerais['percentual_acertos_geral']:.1f}%", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
-            Container(height=10),
+
+            Container(
+                content=Column([
+                    Text("Mapa de Calor da Tabuada", size=22, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
+                    Text(
+                        "Esta grade mostra a dificuldade de cada multiplicação. As cores variam de verde (fácil) a vermelho (difícil).",
+                        size=14,
+                        color=obter_cor_do_tema_ativo("texto_padrao"),
+                        text_align=TextAlign.CENTER,
+                        italic=True
+                    ),
+                ]),
+                margin=ft.margin.only(top=20, bottom=10)
+            ),
+            heatmap_grid,
+            Container(height=5),
+            legenda_heatmap,
+
             Container(
                 Text("Proficiência por Tabuada:", size=22, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
                 margin=ft.margin.only(top=20, bottom=10)

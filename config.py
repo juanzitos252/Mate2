@@ -63,15 +63,20 @@ def carregar_configuracao():
             config_data = json.load(f)
 
         # Validação básica para garantir que as chaves esperadas estão presentes
-        tema = config_data.get("tema_ativo_nome")
-        multiplicacoes = config_data.get("multiplicacoes_data")
-        formulas = config_data.get("custom_formulas_data")
-        pontuacao_maxima = config_data.get("pontuacao_maxima_cronometrado", 0)
-
-        return tema, multiplicacoes, formulas, pontuacao_maxima
+        return {
+            "tema_ativo": config_data.get("tema_ativo_nome"),
+            "multiplicacoes_data": config_data.get("multiplicacoes_data"),
+            "custom_formulas_data": config_data.get("custom_formulas_data"),
+            "pontuacao_maxima_cronometrado": config_data.get("pontuacao_maxima_cronometrado", 0)
+        }
 
     except (IOError, json.JSONDecodeError) as e:
         print(f"Erro ao carregar ou decodificar {CONFIG_FILE}: {e}. Retornando configuração nula.")
         # Se o arquivo estiver corrompido, retornar None para que o main.py possa lidar com isso
         # (por exemplo, reinicializando os dados de multiplicação)
-        return None, None, None, 0
+        return {
+            "tema_ativo": "colorido",
+            "multiplicacoes_data": None,
+            "custom_formulas_data": [],
+            "pontuacao_maxima_cronometrado": 0
+        }

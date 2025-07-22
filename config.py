@@ -14,7 +14,9 @@ def salvar_configuracao(tema, multiplicacoes, formulas, pontuacao_maxima_cronome
     try:
         # Primeiro, carrega os dados existentes para não sobrescrever a pontuação
         # se ela não for passada como argumento.
-        _, _, _, pontuacao_existente = carregar_configuracao()
+        config_existente = carregar_configuracao() if os.path.exists(CONFIG_FILE) else {}
+        pontuacao_existente = config_existente.get("pontuacao_maxima_cronometrado", 0)
+
 
         config_data = {
             "tema_ativo_nome": tema,

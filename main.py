@@ -1284,7 +1284,7 @@ def build_tela_quiz(page: Page):
         for i in range(4):
             btn_opcoes_ctrls[i].text = str(ops[i])
             btn_opcoes_ctrls[i].data = {'opcao': ops[i], 'correta': ops[i] == r_val, 'pergunta_original': pergunta_selecionada}
-            btn_opcoes_ctrls[i].on_click = lambda e, btn=btn_opcoes_ctrls[i]: handle_resposta(page_ref, btn, btn_opcoes_ctrls, txt_feedback_ctrl, btn_proxima_ctrl)
+            btn_opcoes_ctrls[i].on_click = lambda e, btn=btn_opcoes_ctrls[i]: handle_resposta(e, btn, btn_opcoes_ctrls, txt_feedback_ctrl, btn_proxima_ctrl)
             btn_opcoes_ctrls[i].bgcolor = obter_cor_do_tema_ativo("botao_opcao_quiz_bg")
             btn_opcoes_ctrls[i].color = obter_cor_do_tema_ativo("botao_opcao_quiz_texto")
             btn_opcoes_ctrls[i].disabled = False; btn_opcoes_ctrls[i].visible = True
@@ -2840,6 +2840,7 @@ def build_tela_quiz_cronometrado(page: Page):
     update_thread.start()
 
     page.go("/")
+    page.update()
 
 if __name__ == "__main__":
     ft.app(target=main)

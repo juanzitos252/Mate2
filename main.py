@@ -528,6 +528,7 @@ def gerar_dados_heatmap():
 # --- Armazenamento de Fórmulas Personalizadas ---
 custom_formulas_data = [] # Lista para armazenar as fórmulas personalizadas
 current_custom_formula_for_quiz = None # Armazena a fórmula selecionada para o quiz personalizado
+pontuacao_maxima_cronometrado = 0 # Pontuação máxima para o modo cronometrado
 
 # --- Constantes e Lógica de Atualização ---
 # !!! IMPORTANTE: Substitua pelo seu URL do repositório GitHub !!!
@@ -1610,6 +1611,175 @@ def build_tela_estatisticas(page: Page):
         view_container.gradient = None
     return view_container
 
+def build_tela_quiz_cronometrado(page: Page):
+    # Variáveis de estado do jogo
+    pontuacao_atual = ft.Text("Pontuação: 0", size=20, weight=ft.FontWeight.BOLD)
+    tempo_restante = ft.Text("Tempo: 60", size=20, weight=ft.FontWeight.BOLD)
+    pergunta_texto = ft.Text(size=28, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+    resposta_field = ft.TextField(
+        label="Sua resposta",
+        width=200,
+        keyboard_type=ft.KeyboardType.NUMBER,
+        text_align=ft.TextAlign.CENTER,
+        disabled=True
+    )
+    feedback_texto = ft.Text(size=18, weight=ft.FontWeight.BOLD)
+
+    # Referências para o timer e estado do jogo
+    game_state = {
+        "timer_thread": None,
+        "pontos": 0,
+        "tempo": 60,
+        "rodando": False,
+        "pergunta_atual": None
+    }
+
+    def atualizar_ui_timer():
+        """Função para ser chamada pela thread do timer para atualizar a UI."""
+        if page:
+            tempo_restante.value = f"Tempo: {game_state['tempo']}"
+            page.update()
+
+    def fim_de_jogo():
+        """Chamada quando o tempo acaba."""
+        game_state["rodando"] = False
+        pergunta_texto.value = "Tempo esgotado!"
+        resposta_field.disabled = True
+        feedback_texto.value = f"Pontuação final: {game_state['pontos']}"
+        feedback_texto.color = obter_cor_do_tema_ativo("texto_titulos")
+
+        # Salvar pontuação máxima se for um novo recorde
+        global pontuacao_maxima_cronometrado
+        if game_state['pontos'] > pontuacao_maxima_cronometrado:
+            pontuacao_maxima_cronometrado = game_state['pontos']
+            salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data, pontuacao_maxima_cronometrado)
+            feedback_texto.value += " (Novo Recorde!)"
+
+        if page:
+            page.update()
+
+    def timer_loop():
+        """A lógica do timer que roda em uma thread separada."""
+        while game_state["tempo"] > 0 and game_state["rodando"]:
+            time.sleep(1)
+            game_state["tempo"] -= 1
+            ft.app.sync(target=atualizar_ui_timer)
+
+        if game_state["rodando"]:
+            ft.app.sync(target=fim_de_jogo)
+
+    def proxima_pergunta():
+        """Seleciona e exibe uma nova pergunta."""
+        pergunta = selecionar_proxima_pergunta()
+        if pergunta:
+            game_state["pergunta_atual"] = pergunta
+            pergunta_texto.value = f"{pergunta['fator1']} x {pergunta['fator2']} = ?"
+        else:
+            pergunta_texto.value = "Fim das perguntas!"
+            game_state["rodando"] = False
+
+        resposta_field.value = ""
+        resposta_field.focus()
+        if page:
+            page.update()
+
+    def verificar_resposta(e):
+        """Verifica a resposta do usuário."""
+        if not game_state["rodando"]:
+            return
+
+        pergunta = game_state["pergunta_atual"]
+        resposta_correta = pergunta['fator1'] * pergunta['fator2']
+
+        try:
+            resposta_usuario = int(resposta_field.value)
+            if resposta_usuario == resposta_correta:
+                game_state["pontos"] += 1
+                pontuacao_atual.value = f"Pontuação: {game_state['pontos']}"
+                feedback_texto.value = "Correto!"
+                feedback_texto.color = obter_cor_do_tema_ativo("feedback_acerto_texto")
+            else:
+                feedback_texto.value = f"Errado! Era {resposta_correta}"
+                feedback_texto.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+        except (ValueError, TypeError):
+            feedback_texto.value = "Resposta inválida."
+            feedback_texto.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+
+        proxima_pergunta()
+
+    resposta_field.on_submit = verificar_resposta
+
+    def iniciar_quiz_handler(e):
+        """Prepara e inicia o quiz cronometrado."""
+        game_state["pontos"] = 0
+        game_state["tempo"] = 60
+        game_state["rodando"] = True
+
+        pontuacao_atual.value = "Pontuação: 0"
+        tempo_restante.value = "Tempo: 60"
+        feedback_texto.value = ""
+        resposta_field.disabled = False
+        e.control.visible = False # Esconde o botão "Iniciar"
+
+        proxima_pergunta()
+
+        # Inicia o timer em uma nova thread
+        game_state["timer_thread"] = threading.Thread(target=timer_loop, daemon=True)
+        game_state["timer_thread"].start()
+
+        if page:
+            page.update()
+
+    iniciar_button = ft.ElevatedButton(
+        "Iniciar Quiz Cronometrado",
+        on_click=iniciar_quiz_handler,
+        width=BOTAO_LARGURA_PRINCIPAL,
+        height=BOTAO_ALTURA_PRINCIPAL,
+        bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"),
+        color=obter_cor_do_tema_ativo("botao_principal_texto")
+    )
+
+    botao_voltar = ft.ElevatedButton(
+        "Voltar ao Menu",
+        on_click=lambda _: page.go("/"),
+        width=BOTAO_LARGURA_PRINCIPAL,
+        height=BOTAO_ALTURA_PRINCIPAL,
+        bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"),
+        color=obter_cor_do_tema_ativo("botao_principal_texto")
+    )
+
+    layout = ft.Column(
+        [
+            ft.Text("Quiz Cronometrado", size=32, weight=ft.FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
+            ft.Row([pontuacao_atual, tempo_restante], alignment=ft.MainAxisAlignment.SPACE_AROUND),
+            ft.Container(height=20),
+            pergunta_texto,
+            ft.Container(height=10),
+            resposta_field,
+            ft.Container(height=10),
+            feedback_texto,
+            ft.Container(height=30),
+            iniciar_button,
+            botao_voltar
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=20
+    )
+
+    view_container = ft.Container(
+        content=layout,
+        alignment=alignment.center,
+        expand=True,
+        padding=PADDING_VIEW
+    )
+    if tema_ativo_nome == "escuro_moderno":
+        view_container.gradient = obter_cor_do_tema_ativo("gradient_page_bg")
+    else:
+        view_container.bgcolor = obter_cor_do_tema_ativo("fundo_pagina")
+
+    return view_container
+
 # --- Tela de Quiz com Fórmula Personalizada ---
 def build_tela_custom_quiz(page: Page):
     global current_custom_formula_for_quiz
@@ -2522,7 +2692,12 @@ def main(page: Page):
     global tema_ativo_nome, multiplicacoes_data, custom_formulas_data, pontuacao_maxima_cronometrado
 
     # Carrega a configuração. Se não existir, o config.py cria um arquivo padrão.
-    tema_salvo, multiplicacoes_salvas, formulas_salvas, pontuacao_maxima_salva = carregar_configuracao()
+    config = carregar_configuracao()
+    tema_salvo = config["tema_ativo"]
+    multiplicacoes_salvas = config["multiplicacoes_data"]
+    formulas_salvas = config["custom_formulas_data"]
+    pontuacao_maxima_salva = config["pontuacao_maxima_cronometrado"]
+
 
     pontuacao_maxima_cronometrado = pontuacao_maxima_salva if pontuacao_maxima_salva is not None else 0
 

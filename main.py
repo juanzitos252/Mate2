@@ -2818,6 +2818,152 @@ def build_tela_quiz_cronometrado(page: Page):
 
     return view_container
 
+# --- Fim das Funções de Construção de Tela ---
+
+# --- Configuração Principal da Página e Rotas ---
+def main(page: Page):
+    global tema_ativo_nome, multiplicacoes_data, custom_formulas_data, pontuacao_maxima_cronometrado
+
+    # Carrega a configuração. Se não existir, o config.py cria um arquivo padrão.
+    config_carregada = carregar_configuracao()
+    tema_salvo = config_carregada.get("tema_ativo")
+    multiplicacoes_salvas = config_carregada.get("multiplicacoes_data")
+    formulas_salvas = config_carregada.get("custom_formulas_data")
+    pontuacao_maxima_salva = config_carregada.get("pontuacao_maxima_cronometrado")
+
+    pontuacao_maxima_cronometrado = pontuacao_maxima_salva if pontuacao_maxima_salva is not None else 0
+
+    # Define o tema. Usa o tema salvo ou o padrão "colorido".
+    if tema_salvo and tema_salvo in TEMAS:
+        tema_ativo_nome = tema_salvo
+    else:
+        tema_ativo_nome = "colorido" # Garante um fallback se o tema salvo for inválido
+
+    # Carrega as fórmulas personalizadas. Começa com uma lista vazia se não houver dados.
+    if formulas_salvas is not None:
+        custom_formulas_data = formulas_salvas
+    else:
+        custom_formulas_data = []
+
+    # Carrega os dados de multiplicação. Se não houver, inicializa-os.
+    if multiplicacoes_salvas is not None:
+        multiplicacoes_data = multiplicacoes_salvas
+    else:
+        inicializar_multiplicacoes() # Cria os dados de tabuada pela primeira vez
+        # Salva a configuração inicial para que os dados da tabuada persistam
+        salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data, pontuacao_maxima_cronometrado)
+
+    page.title = "Quiz Mestre da Tabuada"
+    page.vertical_alignment = MainAxisAlignment.CENTER
+    page.horizontal_alignment = CrossAxisAlignment.CENTER
+    page.bgcolor = obter_cor_do_tema_ativo("fundo_pagina")
+    page.window_width = 480
+    page.window_height = 800
+    page.fonts = {"RobotoSlab": "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab%5Bwght%5D.ttf"}
+
+    # Inicializar o global update_dialog que foi definido como None anteriormente
+    global update_dialog
+    update_dialog = ft.AlertDialog(
+        modal=True,
+        title=Text("Confirmar Atualização"), # Título padrão
+        content=update_dialog_content_text, # Conteúdo global
+        # As ações são (re)definidas em show_update_dialog
+    )
+
+    def update_ui_elements_for_update_status():
+        """Atualiza os elementos da UI com base no status da verificação de atualização."""
+        global update_available, latest_version_tag, update_check_status_message, APP_CURRENT_VERSION, local_git_commit
+        global update_status_icon, update_status_text, update_action_button # Certificar que estamos usando os globais
+
+        # Atualiza cores baseadas no tema ATIVO
+        update_status_icon.tooltip = update_check_status_message # Tooltip primeiro
+        update_status_text.color = obter_cor_do_tema_ativo("texto_padrao")
+        update_action_button.bgcolor = obter_cor_do_tema_ativo("botao_destaque_bg")
+        update_action_button.color = obter_cor_do_tema_ativo("botao_destaque_texto")
+
+        current_commit_hash = local_git_commit.splitlines()[0] if local_git_commit else 'N/A'
+        base_text = f"v{APP_CURRENT_VERSION} ({current_commit_hash})"
+
+        if "Erro" in update_check_status_message or "Não foi possível conectar" in update_check_status_message:
+            update_status_icon.name = ft.Icons.ERROR_OUTLINE
+            update_status_icon.color = obter_cor_do_tema_ativo("update_icon_color_error")
+            update_status_text.value = f"{base_text} - {update_check_status_message}"
+            update_action_button.visible = False
+        elif update_available:
+            update_status_icon.name = ft.Icons.NEW_RELEASES
+            update_status_icon.color = obter_cor_do_tema_ativo("update_icon_color_available")
+            update_status_icon.tooltip = f"Nova versão {latest_version_tag} disponível!"
+            update_status_text.value = f"Atualização: v{APP_CURRENT_VERSION} -> {latest_version_tag}"
+            update_action_button.visible = True
+        else: # Nenhuma atualização ou já atualizado
+            update_status_icon.name = ft.Icons.CHECK_CIRCLE_OUTLINE
+            update_status_icon.color = obter_cor_do_tema_ativo("update_icon_color_uptodate")
+            update_status_icon.tooltip = "Você está na versão mais recente."
+            update_status_text.value = f"{base_text} - {update_check_status_message}"
+            update_action_button.visible = False
+
+        if page.appbar and hasattr(page.appbar, 'actions'):
+            pass
+
+        page.update()
+
+    def run_update_check_and_ui_refresh(page_ref: Page):
+        """Executa a verificação de atualização e atualiza a UI."""
+        check_for_updates()
+        update_ui_elements_for_update_status()
+
+    # Atribuir o on_click para update_action_button aqui, onde 'page' é definido.
+    update_action_button.on_click = lambda _: show_update_dialog(page)
+
+    def route_change(route_obj):
+        page.bgcolor = obter_cor_do_tema_ativo("fundo_pagina")
+        page.views.clear()
+
+        # AppBar unificada para todas as telas
+        app_bar = ft.AppBar(
+            title=Text("Quiz Mestre da Tabuada", color=obter_cor_do_tema_ativo("texto_titulos")),
+            center_title=True,
+            bgcolor=obter_cor_do_tema_ativo("fundo_pagina"),
+            actions=[
+                Row([
+                    update_status_icon,
+                    Container(width=5),
+                    update_status_text,
+                    Container(width=10)
+                ], alignment=MainAxisAlignment.CENTER, vertical_alignment=CrossAxisAlignment.CENTER),
+            ]
+        )
+
+        page.views.append(
+            View(
+                route="/",
+                controls=[build_tela_apresentacao(page)],
+                vertical_alignment=MainAxisAlignment.CENTER,
+                horizontal_alignment=CrossAxisAlignment.CENTER,
+                appbar=app_bar
+            )
+        )
+        if page.route == "/quiz":
+            page.views.append(View("/quiz", [build_tela_quiz(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/quiz_invertido":
+            page.views.append(View("/quiz_invertido", [build_tela_quiz_invertido(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/treino":
+            page.views.append(View("/treino", [build_tela_treino(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/estatisticas":
+            page.views.append(View("/estatisticas", [build_tela_estatisticas(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/formula_quiz_setup":
+            page.views.append(View("/formula_quiz_setup", [build_tela_formula_quiz_setup(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/custom_quiz":
+            page.views.append(View("/custom_quiz", [build_tela_custom_quiz(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/divisao_direta":
+            page.views.append(View("/divisao_direta", [build_tela_divisao_diretamente_proporcional(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/divisao_inversa":
+            page.views.append(View("/divisao_inversa", [build_tela_divisao_inversamente_proporcional(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/quiz_cronometrado":
+            page.views.append(View("/quiz_cronometrado", [build_tela_quiz_cronometrado(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+
+        update_ui_elements_for_update_status() # Esta função já chama page.update()
+
     def view_pop(view_instance):
         page.views.pop()
         top_view = page.views[-1]
@@ -2829,18 +2975,16 @@ def build_tela_quiz_cronometrado(page: Page):
     def window_event_handler(e):
         if e.data == "close":
             # Garante que o estado mais recente seja salvo ao fechar
-            salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data)
+            salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data, pontuacao_maxima_cronometrado)
             page.window_destroy()
 
     page.on_window_event = window_event_handler
     page.window_prevent_close = True
 
-
     update_thread = threading.Thread(target=run_update_check_and_ui_refresh, args=(page,), daemon=True)
     update_thread.start()
 
     page.go("/")
-    page.update()
 
 if __name__ == "__main__":
     ft.app(target=main)

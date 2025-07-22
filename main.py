@@ -1219,6 +1219,8 @@ def build_tela_apresentacao(page: Page):
             ElevatedButton("Estatísticas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/estatisticas"), tooltip="Veja seu progresso.", bgcolor=obter_cor_do_tema_ativo("botao_opcao_quiz_bg"), color=obter_cor_do_tema_ativo("botao_opcao_quiz_texto")),
             Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
             ElevatedButton("Quiz com Fórmulas", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/formula_quiz_setup"), tooltip="Crie ou selecione um quiz baseado em fórmulas notáveis ou acesse calculadoras.", bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto")),
+            Container(height=ESPACAMENTO_BOTOES_APRESENTACAO),
+            ElevatedButton("Modo Cronometrado", width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, on_click=lambda _: page.go("/quiz_cronometrado"), tooltip="Responda o máximo que puder contra o tempo.", bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto")),
             Container(height=20, margin=ft.margin.only(top=10)), # Mantido para espaçamento antes dos botões de tema
         ] + controles_botoes_tema + [
             Container(height=10), # Mantido para espaçamento antes do botão de atualização
@@ -1413,6 +1415,7 @@ def build_tela_treino(page: Page):
     return view_container
 
 def build_tela_estatisticas(page: Page):
+    global pontuacao_maxima_cronometrado
     stats_gerais = calcular_estatisticas_gerais()
     proficiencia_tabuadas = calcular_proficiencia_tabuadas()
     heatmap_data, min_peso, max_peso = gerar_dados_heatmap()
@@ -1552,6 +1555,7 @@ def build_tela_estatisticas(page: Page):
             Container(height=15),
             Text(f"Total de Perguntas Respondidas: {stats_gerais['total_respondidas']}", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
             Text(f"Percentual de Acertos Geral: {stats_gerais['percentual_acertos_geral']:.1f}%", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
+            Text(f"Pontuação Máxima (Cronometrado): {pontuacao_maxima_cronometrado}", size=18, color=obter_cor_do_tema_ativo("texto_padrao")),
 
             Container(
                 content=Column([
@@ -2518,7 +2522,10 @@ def main(page: Page):
     global tema_ativo_nome, multiplicacoes_data, custom_formulas_data
 
     # Carrega a configuração. Se não existir, o config.py cria um arquivo padrão.
-    tema_salvo, multiplicacoes_salvas, formulas_salvas = carregar_configuracao()
+    tema_salvo, multiplicacoes_salvas, formulas_salvas, pontuacao_maxima_salva = carregar_configuracao()
+
+    global pontuacao_maxima_cronometrado
+    pontuacao_maxima_cronometrado = pontuacao_maxima_salva if pontuacao_maxima_salva is not None else 0
 
     # Define o tema. Usa o tema salvo ou o padrão "colorido".
     if tema_salvo and tema_salvo in TEMAS:
@@ -2646,8 +2653,170 @@ def main(page: Page):
             page.views.append(View("/divisao_direta", [build_tela_divisao_diretamente_proporcional(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
         elif page.route == "/divisao_inversa":
             page.views.append(View("/divisao_inversa", [build_tela_divisao_inversamente_proporcional(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
+        elif page.route == "/quiz_cronometrado":
+            page.views.append(View("/quiz_cronometrado", [build_tela_quiz_cronometrado(page)], vertical_alignment=MainAxisAlignment.CENTER, horizontal_alignment=CrossAxisAlignment.CENTER, appbar=app_bar))
 
         update_ui_elements_for_update_status() # Esta função já chama page.update()
+
+def build_tela_quiz_cronometrado(page: Page):
+    TEMPO_TOTAL = 60  # Segundos
+    timer_thread = None
+    game_over = threading.Event()
+    score = 0
+    current_question_ref = {}
+
+    def update_timer(segundos_restantes):
+        if game_over.is_set():
+            return
+
+        progresso = segundos_restantes / TEMPO_TOTAL
+        timer_bar.value = progresso
+
+        if segundos_restantes <= 10:
+            timer_bar.color = ft.Colors.RED_500
+        else:
+            timer_bar.color = obter_cor_do_tema_ativo("progressbar_cor")
+
+        page.update()
+
+        if segundos_restantes > 0:
+            nonlocal timer_thread
+            timer_thread = threading.Timer(1.0, lambda: update_timer(segundos_restantes - 1))
+            timer_thread.start()
+        else:
+            end_game()
+
+    def end_game():
+        global pontuacao_maxima_cronometrado
+        game_over.set()
+        question_text.value = "Tempo Esgotado!"
+        answer_field.disabled = True
+        feedback_text.value = f"Pontuação Final: {score}"
+        feedback_text.color = obter_cor_do_tema_ativo("texto_titulos")
+        if score > pontuacao_maxima_cronometrado:
+            pontuacao_maxima_cronometrado = score
+            salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data, pontuacao_maxima_cronometrado)
+            feedback_text.value += "\nNovo Recorde!"
+        page.update()
+
+    def load_new_question():
+        if game_over.is_set():
+            return
+
+        question_data = selecionar_proxima_pergunta()
+        if not question_data:
+            question_text.value = "Parabéns! Você respondeu tudo."
+            answer_field.disabled = True
+            game_over.set()
+            return
+
+        current_question_ref.clear()
+        current_question_ref.update(question_data)
+
+        question_text.value = f"{question_data['fator1']} x {question_data['fator2']} = ?"
+        answer_field.value = ""
+        answer_field.focus()
+        page.update()
+
+    def check_answer(e):
+        nonlocal score
+        if game_over.is_set() or not answer_field.value:
+            return
+
+        user_answer = -1
+        try:
+            user_answer = int(answer_field.value)
+        except ValueError:
+            feedback_text.value = "Resposta inválida."
+            feedback_text.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+            page.update()
+            return
+
+        correct_answer = current_question_ref['fator1'] * current_question_ref['fator2']
+        acertou = user_answer == correct_answer
+
+        registrar_resposta(current_question_ref, acertou)
+
+        if acertou:
+            score += 1
+            feedback_text.value = "Correto!"
+            feedback_text.color = obter_cor_do_tema_ativo("feedback_acerto_texto")
+        else:
+            feedback_text.value = f"Errado! A resposta era {correct_answer}"
+            feedback_text.color = obter_cor_do_tema_ativo("feedback_erro_texto")
+
+        score_text.value = f"Pontos: {score}"
+        page.update()
+
+        time.sleep(0.5) # Pequeno delay para o feedback
+        feedback_text.value = ""
+        load_new_question()
+
+    def start_game(e=None):
+        nonlocal score
+        score = 0
+        game_over.clear()
+        answer_field.disabled = False
+        score_text.value = "Pontos: 0"
+        feedback_text.value = ""
+
+        if timer_thread and timer_thread.is_alive():
+            timer_thread.cancel()
+
+        update_timer(TEMPO_TOTAL)
+        load_new_question()
+
+    timer_bar = ProgressBar(width=400, color=obter_cor_do_tema_ativo("progressbar_cor"), bgcolor=obter_cor_do_tema_ativo("progressbar_bg_cor"), value=1, animate_value=Animation(500, "decelerate"))
+    question_text = Text("Pressione 'Iniciar' para começar", size=30, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_titulos"), animate_opacity=ANIMACAO_APARICAO_TEXTO_BOTAO)
+    answer_field = TextField(label="Sua resposta", width=200, keyboard_type=KeyboardType.NUMBER, text_align=TextAlign.CENTER, color=obter_cor_do_tema_ativo("texto_padrao"), border_color=obter_cor_do_tema_ativo("textfield_border_color"), on_submit=check_answer, disabled=True)
+    feedback_text = Text("", size=18, weight=FontWeight.BOLD, text_align=TextAlign.CENTER, opacity=0, animate_opacity=ANIMACAO_FEEDBACK_OPACIDADE, animate_scale=ANIMACAO_FEEDBACK_ESCALA, scale=0.8)
+    score_text = Text("Pontos: 0", size=20, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos"))
+    start_button = ElevatedButton("Iniciar", on_click=start_game, width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, bgcolor=obter_cor_do_tema_ativo("botao_destaque_bg"), color=obter_cor_do_tema_ativo("botao_destaque_texto"))
+
+    def on_back_click(_):
+        game_over.set()
+        if timer_thread and timer_thread.is_alive():
+            timer_thread.cancel()
+        page.go("/")
+
+    back_button = ElevatedButton("Voltar ao Menu", on_click=on_back_click, width=BOTAO_LARGURA_PRINCIPAL, height=BOTAO_ALTURA_PRINCIPAL, bgcolor=obter_cor_do_tema_ativo("botao_principal_bg"), color=obter_cor_do_tema_ativo("botao_principal_texto"))
+
+    content = Column(
+        controls=[
+            Text("Modo Cronometrado", size=32, weight=FontWeight.BOLD, color=obter_cor_do_tema_ativo("texto_titulos")),
+            Container(height=10),
+            timer_bar,
+            Container(height=20),
+            question_text,
+            Container(height=20),
+            answer_field,
+            Container(height=10),
+            feedback_text,
+            Container(height=20),
+            score_text,
+            Container(height=20),
+            start_button,
+            Container(height=10),
+            back_button
+        ],
+        alignment=MainAxisAlignment.CENTER,
+        horizontal_alignment=CrossAxisAlignment.CENTER,
+        spacing=ESPACAMENTO_COLUNA_GERAL,
+        scroll=ScrollMode.AUTO
+    )
+
+    view_container = Container(
+        content=content,
+        alignment=alignment.center,
+        expand=True,
+        padding=PADDING_VIEW
+    )
+    if tema_ativo_nome == "escuro_moderno":
+        view_container.gradient = obter_cor_do_tema_ativo("gradient_page_bg")
+    else:
+        view_container.bgcolor = obter_cor_do_tema_ativo("fundo_pagina")
+
+    return view_container
 
     def view_pop(view_instance):
         page.views.pop()

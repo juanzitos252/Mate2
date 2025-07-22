@@ -5,18 +5,22 @@ import os
 CONFIG_DIR = os.path.expanduser("~/.config/QuizApp")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
-def salvar_configuracao(tema, multiplicacoes, formulas):
+def salvar_configuracao(tema, multiplicacoes, formulas, pontuacao_maxima_cronometrado=None):
     # Garante que o diretório de configuração exista
     os.makedirs(CONFIG_DIR, exist_ok=True)
     """
-    Salva a configuração do usuário (tema, dados de multiplicação e fórmulas)
-    em um arquivo JSON.
+    Salva a configuração do usuário, incluindo a pontuação máxima do modo cronometrado.
     """
     try:
+        # Primeiro, carrega os dados existentes para não sobrescrever a pontuação
+        # se ela não for passada como argumento.
+        _, _, _, pontuacao_existente = carregar_configuracao()
+
         config_data = {
             "tema_ativo_nome": tema,
             "multiplicacoes_data": multiplicacoes,
-            "custom_formulas_data": formulas
+            "custom_formulas_data": formulas,
+            "pontuacao_maxima_cronometrado": pontuacao_maxima_cronometrado if pontuacao_maxima_cronometrado is not None else pontuacao_existente
         }
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(config_data, f, indent=4, ensure_ascii=False)
@@ -33,13 +37,15 @@ def criar_configuracao_padrao():
         config_padrao = {
             "tema_ativo_nome": "colorido", # Um tema padrão
             "multiplicacoes_data": None, # Será inicializado no main.py se for None
-            "custom_formulas_data": [] # Começa com nenhuma fórmula personalizada
+            "custom_formulas_data": [], # Começa com nenhuma fórmula personalizada
+            "pontuacao_maxima_cronometrado": 0
         }
         # A função salvar_configuracao lida com a criação do diretório
         salvar_configuracao(
             config_padrao["tema_ativo_nome"],
             config_padrao["multiplicacoes_data"],
-            config_padrao["custom_formulas_data"]
+            config_padrao["custom_formulas_data"],
+            config_padrao["pontuacao_maxima_cronometrado"]
         )
         return True # Indica que um novo arquivo foi criado
     return False # Indica que o arquivo já existia
@@ -60,11 +66,12 @@ def carregar_configuracao():
         tema = config_data.get("tema_ativo_nome")
         multiplicacoes = config_data.get("multiplicacoes_data")
         formulas = config_data.get("custom_formulas_data")
+        pontuacao_maxima = config_data.get("pontuacao_maxima_cronometrado", 0)
 
-        return tema, multiplicacoes, formulas
+        return tema, multiplicacoes, formulas, pontuacao_maxima
 
     except (IOError, json.JSONDecodeError) as e:
         print(f"Erro ao carregar ou decodificar {CONFIG_FILE}: {e}. Retornando configuração nula.")
         # Se o arquivo estiver corrompido, retornar None para que o main.py possa lidar com isso
         # (por exemplo, reinicializando os dados de multiplicação)
-        return None, None, None
+        return None, None, None, 0

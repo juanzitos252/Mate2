@@ -2825,11 +2825,7 @@ def main(page: Page):
     global tema_ativo_nome, multiplicacoes_data, custom_formulas_data, pontuacao_maxima_cronometrado
 
     # Carrega a configuração. Se não existir, o config.py cria um arquivo padrão.
-    config_carregada = carregar_configuracao()
-    tema_salvo = config_carregada.get("tema_ativo")
-    multiplicacoes_salvas = config_carregada.get("multiplicacoes_data")
-    formulas_salvas = config_carregada.get("custom_formulas_data")
-    pontuacao_maxima_salva = config_carregada.get("pontuacao_maxima_cronometrado")
+    tema_salvo, multiplicacoes_salvas, formulas_salvas, pontuacao_maxima_salva = carregar_configuracao()
 
     pontuacao_maxima_cronometrado = pontuacao_maxima_salva if pontuacao_maxima_salva is not None else 0
 

@@ -1640,7 +1640,7 @@ def build_tela_quiz_cronometrado(page: Page):
             tempo_restante.value = f"Tempo: {game_state['tempo']}"
             page.update()
 
-    def fim_de_jogo():
+    def fim_de_jogo(page_ref: ft.Page):
         """Chamada quando o tempo acaba."""
         game_state["rodando"] = False
         pergunta_texto.value = "Tempo esgotado!"
@@ -1655,18 +1655,18 @@ def build_tela_quiz_cronometrado(page: Page):
             salvar_configuracao(tema_ativo_nome, multiplicacoes_data, custom_formulas_data, pontuacao_maxima_cronometrado)
             feedback_texto.value += " (Novo Recorde!)"
 
-        if page:
-            page.update()
+        if page_ref:
+            page_ref.update()
 
-    def timer_loop():
+    def timer_loop(page_ref: ft.Page):
         """A lógica do timer que roda em uma thread separada."""
         while game_state["tempo"] > 0 and game_state["rodando"]:
             time.sleep(1)
             game_state["tempo"] -= 1
-            ft.app.sync(target=atualizar_ui_timer)
+            atualizar_ui_timer()
 
         if game_state["rodando"]:
-            ft.app.sync(target=fim_de_jogo)
+            fim_de_jogo(page_ref)
 
     def proxima_pergunta():
         """Seleciona e exibe uma nova pergunta."""
@@ -1724,7 +1724,7 @@ def build_tela_quiz_cronometrado(page: Page):
         proxima_pergunta()
 
         # Inicia o timer em uma nova thread
-        game_state["timer_thread"] = threading.Thread(target=timer_loop, daemon=True)
+        game_state["timer_thread"] = threading.Thread(target=timer_loop, args=(page,), daemon=True)
         game_state["timer_thread"].start()
 
         if page:

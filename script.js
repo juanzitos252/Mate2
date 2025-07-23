@@ -547,7 +547,7 @@ async function loadMemorization() {
     tableHTML += '</table>';
     memorizationContentEl.innerHTML = tableHTML;
 
-    setTimeout(loadMemorizationQuestion, 5000); // 5 segundos para memorizar
+    setTimeout(loadMemorizationQuestion, 20000); // 20 segundos para memorizar
 }
 
 function loadMemorizationQuestion() {

@@ -17,8 +17,19 @@ class TestApi(unittest.TestCase):
         # Test that the weight of a question is updated correctly
         question = self.api.selecionar_proxima_pergunta()
         initial_weight = question['peso']
-        self.api.registrar_resposta(question, True)
+        self.api.registrar_resposta(question, True, 1.0)
         self.assertLess(question['peso'], initial_weight)
+
+    def test_registrar_resposta_atualiza_pesos_tabuada(self):
+        # Test that the weights of the times tables are updated correctly
+        question = self.api.selecionar_proxima_pergunta()
+        fator1 = str(question['fator1'])
+        fator2 = str(question['fator2'])
+        initial_weight_fator1 = self.api.pesos_tabuadas[fator1]
+        initial_weight_fator2 = self.api.pesos_tabuadas[fator2]
+        self.api.registrar_resposta(question, True, 1.0)
+        self.assertLess(self.api.pesos_tabuadas[fator1], initial_weight_fator1)
+        self.assertLess(self.api.pesos_tabuadas[fator2], initial_weight_fator2)
 
     def test_gerar_opcoes(self):
         # Test that 4 options are returned, including the correct answer

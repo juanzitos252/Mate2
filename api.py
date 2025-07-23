@@ -94,7 +94,7 @@ class Api:
 
         if acertou:
             pergunta['vezes_correta'] = pergunta.get('vezes_correta', 0) + 1
-            fator_reducao = 0.7 if modo_jogo == 'quiz' else 0.4 # Recompensa maior na memorização
+            fator_reducao = 0.7 if modo_jogo == 'quiz' else 0.5
             if tempo_resposta is not None and modo_jogo == 'quiz':
                 if tempo_resposta < 2:
                     fator_reducao = 0.5
@@ -105,7 +105,7 @@ class Api:
             pergunta['peso'] = max(1.0, pergunta.get('peso', 10.0) * fator_reducao)
             pergunta['erros_consecutivos'] = 0
         else:
-            fator_aumento = 1.6 if modo_jogo == 'quiz' else 1.8 # Penalidade maior na memorização
+            fator_aumento = 1.6 if modo_jogo == 'quiz' else 2.0
             pergunta['peso'] = min(100.0, pergunta.get('peso', 10.0) * fator_aumento)
             pergunta['erros_consecutivos'] = pergunta.get('erros_consecutivos', 0) + 1
 

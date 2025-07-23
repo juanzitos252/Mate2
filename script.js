@@ -7,11 +7,13 @@ function renderPresentationScreen() {
             <p>Aprenda e memorize a tabuada de forma divertida e adaptativa!</p>
             <div class="d-grid gap-2 col-6 mx-auto">
                 <button class="btn btn-primary" onclick="navigateTo('quiz')">Iniciar Quiz</button>
-                <button class="btn btn-secondary" onclick="navigateTo('quiz_invertido')">Quiz Invertido</button>
+                <button class="btn btn-primary" onclick="navigateTo('quiz_invertido')">Quiz Invertido</button>
                 <button class="btn btn-primary" onclick="navigateTo('treino')">Modo Treino</button>
-                <button class="btn btn-info" onclick="navigateTo('estatisticas')">Estatísticas</button>
-                <button class="btn btn-secondary" onclick="navigateTo('formula_quiz_setup')">Quiz com Fórmulas</button>
+                <button class="btn btn-primary" onclick="navigateTo('memorizacao')">Modo Memorização</button>
                 <button class="btn btn-primary" onclick="navigateTo('quiz_cronometrado')">Modo Cronometrado</button>
+                <hr>
+                <button class="btn btn-secondary" onclick="navigateTo('formula_quiz_setup')">Quiz com Fórmulas</button>
+                <button class="btn btn-info" onclick="navigateTo('estatisticas')">Estatísticas</button>
             </div>
         </div>
     `;
@@ -168,6 +170,7 @@ const routes = {
     'estatisticas': renderEstatisticasScreen,
     'formula_quiz_setup': renderFormulaQuizSetupScreen,
     'quiz_cronometrado': renderQuizCronometradoScreen,
+    'memorizacao': renderMemorizationScreen,
 };
 
 function navigateTo(route) {
@@ -294,7 +297,8 @@ async function loadTrainingTable() {
     const inputs = [];
     for (let i = 1; i <= 10; i++) {
         const inputId = `input-${i}`;
-        inputs.push({ id: inputId, fator1: suggestedTable, fator2: i, correctAnswer: suggestedTable * i });
+        const question = { fator1: suggestedTable, fator2: i };
+        inputs.push({ id: inputId, question: question, correctAnswer: suggestedTable * i });
         tableHTML += `
             <tr>
                 <td>${suggestedTable} x ${i} = </td>
@@ -307,6 +311,8 @@ async function loadTrainingTable() {
 
     checkAnswersEl.onclick = () => {
         let correctAnswers = 0;
+        let startTime = new Date().getTime();
+
         inputs.forEach(input => {
             const inputEl = document.getElementById(input.id);
             const isCorrect = parseInt(inputEl.value) === input.correctAnswer;
@@ -317,7 +323,11 @@ async function loadTrainingTable() {
                 inputEl.classList.add('is-invalid');
             }
             inputEl.disabled = true;
-            window.pywebview.api.registrar_resposta({ fator1: input.fator1, fator2: input.fator2 }, isCorrect);
+
+            const endTime = new Date().getTime();
+            const responseTime = (endTime - startTime) / 1000;
+
+            window.pywebview.api.registrar_resposta(input.question, isCorrect, responseTime);
         });
         trainingSummaryEl.textContent = `Você acertou ${correctAnswers} de 10!`;
         checkAnswersEl.disabled = true;
@@ -499,6 +509,59 @@ async function loadTimedQuiz() {
             checkAnswer();
         }
     };
+}
+
+function renderMemorizationScreen() {
+    app.innerHTML = `
+        <div class="container text-center">
+            <h1>Modo Memorização</h1>
+            <div id="memorization-content"></div>
+            <button class="btn btn-secondary" onclick="navigateTo('home')">Voltar ao Menu</button>
+        </div>
+    `;
+    loadMemorization();
+}
+
+async function loadMemorization() {
+    const memorizationContentEl = document.getElementById('memorization-content');
+    const tableNumber = await window.pywebview.api.sugerir_tabuada_para_memorizacao();
+
+    let tableHTML = `<h2>Memorize a Tabuada do ${tableNumber}</h2>`;
+    tableHTML += '<table class="table table-bordered">';
+    for (let i = 1; i <= 10; i++) {
+        tableHTML += `<tr><td>${tableNumber} x ${i} = ${tableNumber * i}</td></tr>`;
+    }
+    tableHTML += '</table>';
+    memorizationContentEl.innerHTML = tableHTML;
+
+    setTimeout(async () => {
+        const factor2 = Math.floor(Math.random() * 10) + 1;
+        const question = { fator1: tableNumber, fator2: factor2 };
+
+        memorizationContentEl.innerHTML = `
+            <h2>Qual é o resultado de ${tableNumber} x ${factor2}?</h2>
+            <input type="number" class="form-control" id="memorization-answer">
+            <button class="btn btn-primary mt-2" id="check-memorization-answer">Responder</button>
+            <p id="memorization-feedback"></p>
+        `;
+
+        const answerEl = document.getElementById('memorization-answer');
+        const checkButton = document.getElementById('check-memorization-answer');
+        const feedbackEl = document.getElementById('memorization-feedback');
+
+        checkButton.onclick = () => {
+            const correctAnswer = tableNumber * factor2;
+            const isCorrect = parseInt(answerEl.value) === correctAnswer;
+
+            window.pywebview.api.registrar_resposta(question, isCorrect, 20); // Tempo fixo de 20s
+
+            feedbackEl.textContent = isCorrect ? 'Correto!' : `Errado! A resposta era ${correctAnswer}`;
+            checkButton.disabled = true;
+            answerEl.disabled = true;
+
+            setTimeout(loadMemorization, 2000); // Carrega próxima tabuada
+        };
+    }, 20000); // 20 segundos
 }
 
 window.addEventListener('load', () => {

@@ -156,14 +156,21 @@ class Api:
             if fator2 in pesos_por_tabuada and fator1 != fator2:
                 pesos_por_tabuada[fator2] += peso; contagem_por_tabuada[fator2] += 1
         media_pesos = { tab: pesos_por_tabuada[tab] / contagem_por_tabuada[tab] if contagem_por_tabuada[tab] > 0 else 0 for tab in pesos_por_tabuada }
-        if not any(v > 0 for v in media_pesos.values()): return random.randint(1,10) # Verifica se algum peso é maior que 0
+        if not any(v > 0 for v in media_pesos.values()): return random.randint(1,10)
         return max(media_pesos, key=media_pesos.get)
 
+    def sugerir_tabuada_para_memorizacao(self):
+        return self.sugerir_tabuada_para_treino()
+
     def calcular_estatisticas_gerais(self):
-        if not self.multiplicacoes_data:
+        if not self.multiplicacoes_data or all(p['vezes_apresentada'] == 0 for p in self.multiplicacoes_data):
             return {
-                'total_respondidas': 0, 'percentual_acertos_geral': 0, 'top_3_dificeis': [],
-                'tempo_medio_resposta_geral': 0, 'questao_mais_lenta': 'N/A', 'questao_mais_errada_consecutivamente': 'N/A'
+                'total_respondidas': 0,
+                'percentual_acertos_geral': 0,
+                'top_3_dificeis': [],
+                'tempo_medio_resposta_geral': 0,
+                'questao_mais_lenta': 'N/A',
+                'questao_mais_errada_consecutivamente': 'N/A'
             }
 
         total_respondidas = sum(item['vezes_apresentada'] for item in self.multiplicacoes_data)

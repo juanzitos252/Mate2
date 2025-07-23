@@ -325,7 +325,7 @@ class Api:
 
     def load_initial_data(self):
         config = carregar_configuracao()
-        self.tema_ativo_nome = config.get("tema_ativo_nome", "colorido")
+        self.tema_ativo_nome = config.get("tema_ativo", "colorido")
         self.multiplicacoes_data = config.get("multiplicacoes_data")
         self.custom_formulas_data = config.get("custom_formulas_data", [])
         self.pesos_tabuadas = config.get("pesos_tabuadas", {str(i): 1.0 for i in range(1, 11)})

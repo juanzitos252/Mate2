@@ -37,10 +37,21 @@ def salvar_tema(tema):
     try:
         os.makedirs(CONFIG_DIR, exist_ok=True)
         config_existente = carregar_configuracao() if os.path.exists(CONFIG_FILE) else {}
-        config_existente["tema_ativo_nome"] = tema
 
+        # Atualiza o tema na configuração existente
+        config_existente["tema_ativo"] = tema
+
+        # Salva o objeto de configuração completo de volta no arquivo
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-            json.dump(config_existente, f, indent=4, ensure_ascii=False)
+            # Prepara os dados para salvar, garantindo que todas as chaves esperadas estejam presentes
+            config_data_to_save = {
+                "tema_ativo_nome": config_existente.get("tema_ativo"),
+                "multiplicacoes_data": config_existente.get("multiplicacoes_data"),
+                "custom_formulas_data": config_existente.get("custom_formulas_data"),
+                "pesos_tabuadas": config_existente.get("pesos_tabuadas"),
+                "pontuacao_maxima_cronometrado": config_existente.get("pontuacao_maxima_cronometrado")
+            }
+            json.dump(config_data_to_save, f, indent=4, ensure_ascii=False)
     except (IOError, TypeError) as e:
         print(f"Erro ao salvar o tema em {CONFIG_FILE}: {e}")
 
@@ -51,16 +62,9 @@ def criar_configuracao_padrao():
     if not os.path.exists(CONFIG_FILE):
         print(f"Arquivo de configuração não encontrado. Criando um novo em {CONFIG_FILE}")
         # Define uma configuração padrão mínima
-        multiplicacoes_data = []
-        for i in range(1, 11):
-            for j in range(1, 11):
-                multiplicacoes_data.append({
-                    'fator1': i, 'fator2': j, 'peso': 10.0, 'historico_erros': [],
-                    'vezes_apresentada': 0, 'vezes_correta': 0, 'ultima_vez_apresentada_ts': 0.0
-                })
         config_padrao = {
             "tema_ativo_nome": "colorido", # Um tema padrão
-            "multiplicacoes_data": multiplicacoes_data, # Será inicializado no main.py se for None
+            "multiplicacoes_data": None, # Será inicializado no main.py se for None
             "custom_formulas_data": [], # Começa com nenhuma fórmula personalizada
             "pesos_tabuadas": {str(i): 1.0 for i in range(1, 11)},
             "pontuacao_maxima_cronometrado": 0

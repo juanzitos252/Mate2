@@ -246,85 +246,116 @@ class Api:
         # A lógica pode ser a mesma do treino ou diferente no futuro.
         return self.sugerir_tabuada_para_treino()
 
-    def calcular_estatisticas_gerais(self):
-        """Calcula e retorna as estatísticas gerais de desempenho."""
+    def get_estatisticas_gerais(self):
+        """Retorna um resumo das estatísticas gerais."""
         if not self.multiplicacoes_data or all(p.get('vezes_apresentada', 0) == 0 for p in self.multiplicacoes_data):
-            return self._estatisticas_padrao()
+            return {
+                'total_respondidas': 0, 'percentual_acertos_geral': 0,
+                'tempo_medio_resposta_geral': 0, 'progresso_geral': 0
+            }
 
-        total_respondidas = sum(item.get('vezes_apresentada', 0) for item in self.multiplicacoes_data)
-        total_acertos = sum(item.get('vezes_correta', 0) for item in self.multiplicacoes_data)
+        total_respondidas = sum(p.get('vezes_apresentada', 0) for p in self.multiplicacoes_data)
+        total_acertos = sum(p.get('vezes_correta', 0) for p in self.multiplicacoes_data)
         percentual_acertos = (total_acertos / total_respondidas * 100) if total_respondidas > 0 else 0
 
-        top_3_dificeis = self._get_top_3_dificeis()
-        tempo_medio_geral, questao_mais_lenta = self._get_metricas_tempo()
-        questao_mais_errada = self._get_questao_mais_errada()
+        tempos_respostas = [t for p in self.multiplicacoes_data for t in p.get('tempos_resposta', [])]
+        tempo_medio_geral = sum(tempos_respostas) / len(tempos_respostas) if tempos_respostas else 0
+
+        # O progresso geral pode ser a média da proficiência em todas as tabuadas
+        proficiencia_por_tabuada = self.get_proficiencia_por_tabuada()
+        progresso_geral = sum(proficiencia_por_tabuada.values()) / len(proficiencia_por_tabuada) if proficiencia_por_tabuada else 0
 
         return {
             'total_respondidas': total_respondidas,
             'percentual_acertos_geral': round(percentual_acertos, 1),
-            'top_3_dificeis': top_3_dificeis,
             'tempo_medio_resposta_geral': round(tempo_medio_geral, 2),
-            'questao_mais_lenta': questao_mais_lenta,
-            'questao_mais_errada_consecutivamente': questao_mais_errada
+            'progresso_geral': round(progresso_geral, 1)
         }
 
-    def _estatisticas_padrao(self):
-        """Retorna um dicionário de estatísticas padrão."""
+    def get_estatisticas_detalhadas(self):
+        """Retorna estatísticas mais detalhadas para a página de estatísticas."""
+        if not self.multiplicacoes_data:
+            return self._estatisticas_detalhadas_padrao()
+
+        top_3_dificeis = self._get_top_questoes('peso', reverse=True, count=3)
+        top_3_faceis = self._get_top_questoes('peso', reverse=False, count=3)
+        top_3_lentas = self._get_top_questoes_por_tempo_medio(count=3)
+        top_3_rapidas = self._get_top_questoes_por_tempo_medio(count=3, reverse=False)
+
         return {
-            'total_respondidas': 0, 'percentual_acertos_geral': 0, 'top_3_dificeis': [],
-            'tempo_medio_resposta_geral': 0, 'questao_mais_lenta': 'N/A',
-            'questao_mais_errada_consecutivamente': 'N/A'
+            'top_3_dificeis': top_3_dificeis,
+            'top_3_faceis': top_3_faceis,
+            'top_3_lentas': top_3_lentas,
+            'top_3_rapidas': top_3_rapidas,
         }
 
-    def _get_top_3_dificeis(self):
-        """Retorna as 3 questões mais difíceis."""
+    def _estatisticas_detalhadas_padrao(self):
+        return {
+            'top_3_dificeis': [], 'top_3_faceis': [],
+            'top_3_lentas': [], 'top_3_rapidas': []
+        }
+
+    def _get_top_questoes(self, sort_key, reverse, count):
+        """Helper para buscar questões com base em uma chave de ordenação."""
         questoes_apresentadas = [p for p in self.multiplicacoes_data if p.get('vezes_apresentada', 0) > 0]
-        questoes_apresentadas.sort(key=lambda x: x.get('peso', 10.0), reverse=True)
-        return [f"{item['fator1']} x {item['fator2']}" for item in questoes_apresentadas[:3]]
+        questoes_apresentadas.sort(key=lambda x: x.get(sort_key, 0), reverse=reverse)
+        return [f"{item['fator1']} x {item['fator2']}" for item in questoes_apresentadas[:count]]
 
-    def _get_metricas_tempo(self):
-        """Calcula o tempo médio de resposta e a questão mais lenta."""
-        tempos_respostas = [t for item in self.multiplicacoes_data for t in item.get('tempos_resposta', [])]
-        if not tempos_respostas:
-            return 0, "N/A"
-
-        tempo_medio_geral = sum(tempos_respostas) / len(tempos_respostas)
-
+    def _get_top_questoes_por_tempo_medio(self, count, reverse=True):
+        """Retorna as questões mais lentas ou rápidas com base no tempo médio de resposta."""
         questoes_com_tempo = [
-            {'item': item, 'tempo_medio': sum(item['tempos_resposta']) / len(item['tempos_resposta'])}
-            for item in self.multiplicacoes_data if item.get('tempos_resposta')
+            {
+                'texto': f"{p['fator1']} x {p['fator2']}",
+                'tempo_medio': sum(p['tempos_resposta']) / len(p['tempos_resposta'])
+            }
+            for p in self.multiplicacoes_data if p.get('tempos_resposta')
         ]
-
         if not questoes_com_tempo:
-            return tempo_medio_geral, "N/A"
+            return []
 
-        mais_lenta = max(questoes_com_tempo, key=lambda x: x['tempo_medio'])
-        return tempo_medio_geral, f"{mais_lenta['item']['fator1']} x {mais_lenta['item']['fator2']}"
+        questoes_com_tempo.sort(key=lambda x: x['tempo_medio'], reverse=reverse)
+        return [f"{q['texto']} ({q['tempo_medio']:.2f}s)" for q in questoes_com_tempo[:count]]
 
-    def _get_questao_mais_errada(self):
-        """Retorna a questão com mais erros consecutivos."""
-        questoes_com_erros = [p for p in self.multiplicacoes_data if p.get('erros_consecutivos', 0) > 0]
-        if not questoes_com_erros:
-            return "N/A"
-
-        mais_errada = max(questoes_com_erros, key=lambda x: x['erros_consecutivos'])
-        return f"{mais_errada['fator1']} x {mais_errada['fator2']} ({mais_errada['erros_consecutivos']} erros)"
-
-    def calcular_proficiencia_tabuadas(self):
+    def get_proficiencia_por_tabuada(self):
         """Calcula a proficiência do usuário para cada tabuada."""
         proficiencia = {i: 0.0 for i in range(1, 11)}
-        if not self.multiplicacoes_data:
-            return proficiencia
-
         media_pesos = self._calcular_media_pesos_tabuadas()
 
         for tab, media in media_pesos.items():
             if media > 0:
-                # Normaliza o peso (que vai de 1 a 100) para uma proficiência de 0 a 100
-                proficiencia_percentual = max(0, 100 - (media - 1))
+                proficiencia_percentual = max(0, 100 - (media - 1) * (100 / 99))
                 proficiencia[tab] = round(proficiencia_percentual, 1)
-
         return proficiencia
+
+    def get_estatisticas_por_tabuada(self):
+        """Calcula e retorna estatísticas detalhadas para cada tabuada."""
+        stats_por_tabuada = {i: self._inicializar_stats_tabuada() for i in range(1, 11)}
+
+        for item in self.multiplicacoes_data:
+            f1, f2 = item['fator1'], item['fator2']
+            self._acumular_stats_para_tabuada(stats_por_tabuada[f1], item)
+            if f1 != f2:
+                self._acumular_stats_para_tabuada(stats_por_tabuada[f2], item)
+
+        # Calcular médias e percentuais
+        for i in range(1, 11):
+            stats = stats_por_tabuada[i]
+            if stats['total_respostas'] > 0:
+                stats['percentual_acertos'] = round((stats['total_acertos'] / stats['total_respostas']) * 100, 1)
+            if stats['tempos']:
+                stats['tempo_medio'] = round(sum(stats['tempos']) / len(stats['tempos']), 2)
+            del stats['tempos'] # Remover a lista de tempos antes de retornar
+
+        return stats_por_tabuada
+
+    def _inicializar_stats_tabuada(self):
+        return {'total_respostas': 0, 'total_acertos': 0, 'tempo_medio': 0, 'tempos': []}
+
+    def _acumular_stats_para_tabuada(self, stats_tabuada, item):
+        stats_tabuada['total_respostas'] += item.get('vezes_apresentada', 0)
+        stats_tabuada['total_acertos'] += item.get('vezes_correta', 0)
+        if item.get('tempos_resposta'):
+            stats_tabuada['tempos'].extend(item['tempos_resposta'])
 
     def gerar_dados_heatmap(self):
         """Gera os dados para o heatmap de dificuldade."""

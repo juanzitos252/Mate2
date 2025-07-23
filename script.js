@@ -69,13 +69,22 @@ const templates = {
         </div>
     `,
     estatisticas: () => `
-        <div class="container text-center">
-            <h1>Estatísticas</h1>
-            <div id="stats-summary"></div>
-            <div id="heatmap"></div>
-            <div id="proficiency"></div>
-            <div id="top-difficulties"></div>
-            <button class="btn btn-secondary" data-route="home">Voltar ao Menu</button>
+        <div class="container">
+            <h1 class="text-center">Estatísticas de Desempenho</h1>
+            <div id="stats-general" class="card mb-4"></div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div id="stats-proficiency" class="card mb-4"></div>
+                </div>
+                <div class="col-lg-6">
+                    <div id="stats-heatmap" class="card mb-4"></div>
+                </div>
+            </div>
+            <div id="stats-details" class="card mb-4"></div>
+            <div id="stats-by-table" class="card"></div>
+            <div class="text-center mt-4">
+                <button class="btn btn-secondary" data-route="home">Voltar ao Menu</button>
+            </div>
         </div>
     `,
     formula_quiz_setup: () => `
@@ -243,47 +252,115 @@ const screenLogics = {
         });
     },
     estatisticas: async () => {
-        const summaryEl = document.getElementById('stats-summary');
-        summaryEl.innerHTML = '<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>';
+        // Render General Stats
+        const generalStatsEl = document.getElementById('stats-general');
+        generalStatsEl.innerHTML = '<div class="card-body text-center"><div class="spinner-border" role="status"></div></div>';
+        const generalStats = await apiCall('get_estatisticas_gerais');
+        if (generalStats) {
+            generalStatsEl.innerHTML = `
+                <div class="card-header"><h3>Visão Geral</h3></div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3"><h5>Progresso Geral</h5><p>${generalStats.progresso_geral}%</p></div>
+                        <div class="col-md-3"><h5>Total de Respostas</h5><p>${generalStats.total_respondidas}</p></div>
+                        <div class="col-md-3"><h5>Percentual de Acertos</h5><p>${generalStats.percentual_acertos_geral}%</p></div>
+                        <div class="col-md-3"><h5>Tempo Médio de Resposta</h5><p>${generalStats.tempo_medio_resposta_geral}s</p></div>
+                    </div>
+                </div>
+            `;
+        }
 
-        const stats = await apiCall('calcular_estatisticas_gerais');
-        if (!stats) return;
-
-        summaryEl.innerHTML = `
-            <div class="row">
-                <div class="col-md-6"><p><strong>Total Respondidas:</strong> ${stats.total_respondidas}</p></div>
-                <div class="col-md-6"><p><strong>Acertos:</strong> ${stats.percentual_acertos_geral}%</p></div>
-                <div class="col-md-6"><p><strong>Tempo Médio:</strong> ${stats.tempo_medio_resposta_geral}s</p></div>
-                <div class="col-md-6"><p><strong>Questão Mais Lenta:</strong> ${stats.questao_mais_lenta}</p></div>
-                <div class="col-md-6"><p><strong>Mais Erros Consecutivos:</strong> ${stats.questao_mais_errada_consecutivamente}</p></div>
-            </div>
-        `;
-
-        const [heatmapData, minPeso, maxPeso] = await apiCall('gerar_dados_heatmap');
-        const heatmapEl = document.getElementById('heatmap');
-        let heatmapHTML = '<h2>Mapa de Calor da Dificuldade</h2><table class="table table-bordered heatmap-table">';
-        for (let i = 0; i < 10; i++) {
-            heatmapHTML += '<tr>';
-            for (let j = 0; j < 10; j++) {
-                const weight = heatmapData[i][j];
-                const normalizedWeight = (weight - minPeso) / (maxPeso - minPeso || 1);
-                const hue = 120 * (1 - normalizedWeight); // 120 (verde) para fácil, 0 (vermelho) para difícil
-                const color = `hsl(${hue}, 100%, 50%)`;
-                heatmapHTML += `<td style="background-color: ${color};" title="Peso: ${weight.toFixed(1)}"></td>`;
+        // Render Proficiency
+        const proficiencyEl = document.getElementById('stats-proficiency');
+        proficiencyEl.innerHTML = '<div class="card-body text-center"><div class="spinner-border" role="status"></div></div>';
+        const proficiencyData = await apiCall('get_proficiencia_por_tabuada');
+        if (proficiencyData) {
+            let proficiencyHTML = '<div class="card-header"><h3>Proficiência por Tabuada</h3></div><div class="card-body">';
+            for (let i = 1; i <= 10; i++) {
+                const proficiency = proficiencyData[i] || 0;
+                proficiencyHTML += `
+                    <div class="mb-2">
+                        <span>Tabuada do ${i}</span>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar" role="progressbar" style="width: ${proficiency}%;" aria-valuenow="${proficiency}" aria-valuemin="0" aria-valuemax="100">${proficiency}%</div>
+                        </div>
+                    </div>`;
             }
-            heatmapHTML += '</tr>';
+            proficiencyHTML += '</div>';
+            proficiencyEl.innerHTML = proficiencyHTML;
         }
-        heatmapHTML += '</table>';
-        heatmapEl.innerHTML = heatmapHTML;
 
-        const proficiencyData = await apiCall('calcular_proficiencia_tabuadas');
-        const proficiencyEl = document.getElementById('proficiency');
-        let proficiencyHTML = '<h2>Proficiência por Tabuada</h2>';
-        for (let i = 1; i <= 10; i++) {
-            proficiencyHTML += `<p>Tabuada do ${i}: ${proficiencyData[i].toFixed(1)}%</p>
-            <div class="progress"><div class="progress-bar" style="width: ${proficiencyData[i]}%;"></div></div>`;
+        // Render Heatmap
+        const heatmapEl = document.getElementById('stats-heatmap');
+        heatmapEl.innerHTML = '<div class="card-body text-center"><div class="spinner-border" role="status"></div></div>';
+        const [heatmapData, minPeso, maxPeso] = await apiCall('gerar_dados_heatmap');
+        if (heatmapData) {
+            let heatmapHTML = `
+                <div class="card-header"><h3>Mapa de Calor de Dificuldade</h3></div>
+                <div class="card-body">
+                    <table class="table table-bordered heatmap-table">`;
+            for (let i = 0; i < 10; i++) {
+                heatmapHTML += '<tr>';
+                for (let j = 0; j < 10; j++) {
+                    const weight = heatmapData[i][j];
+                    const normalizedWeight = (weight - minPeso) / (maxPeso - minPeso || 1);
+                    const hue = 120 * (1 - normalizedWeight); // Verde (fácil) para Vermelho (difícil)
+                    const color = `hsl(${hue}, 85%, 55%)`;
+                    heatmapHTML += `<td style="background-color: ${color};" title="Dificuldade de ${i+1}x${j+1}: ${weight.toFixed(1)}"></td>`;
+                }
+                heatmapHTML += '</tr>';
+            }
+            heatmapHTML += '</table></div>';
+            heatmapEl.innerHTML = heatmapHTML;
         }
-        proficiencyEl.innerHTML = proficiencyHTML;
+
+        // Render Detailed Stats
+        const detailsEl = document.getElementById('stats-details');
+        detailsEl.innerHTML = '<div class="card-body text-center"><div class="spinner-border" role="status"></div></div>';
+        const detailedStats = await apiCall('get_estatisticas_detalhadas');
+        if (detailedStats) {
+            const renderList = (title, items) => `
+                <div class="col-md-3">
+                    <h5>${title}</h5>
+                    <ul class="list-group">${items.map(item => `<li class="list-group-item">${item}</li>`).join('') || '<li class="list-group-item">N/A</li>'}</ul>
+                </div>`;
+            detailsEl.innerHTML = `
+                <div class="card-header"><h3>Destaques</h3></div>
+                <div class="card-body">
+                    <div class="row">
+                        ${renderList('Mais Difíceis', detailedStats.top_3_dificeis)}
+                        ${renderList('Mais Fáceis', detailedStats.top_3_faceis)}
+                        ${renderList('Mais Lentas', detailedStats.top_3_lentas)}
+                        ${renderList('Mais Rápidas', detailedStats.top_3_rapidas)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Stats by Table
+        const byTableEl = document.getElementById('stats-by-table');
+        byTableEl.innerHTML = '<div class="card-body text-center"><div class="spinner-border" role="status"></div></div>';
+        const tableStats = await apiCall('get_estatisticas_por_tabuada');
+        if (tableStats) {
+            let tableHTML = `
+                <div class="card-header"><h3>Desempenho por Tabuada</h3></div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Tabuada</th><th>% Acertos</th><th>Tempo Médio (s)</th><th>Total de Respostas</th></tr></thead>
+                        <tbody>`;
+            for (let i = 1; i <= 10; i++) {
+                const stats = tableStats[i];
+                tableHTML += `
+                    <tr>
+                        <td>Tabuada do ${i}</td>
+                        <td>${stats.percentual_acertos}%</td>
+                        <td>${stats.tempo_medio}s</td>
+                        <td>${stats.total_respostas}</td>
+                    </tr>`;
+            }
+            tableHTML += '</tbody></table></div>';
+            byTableEl.innerHTML = tableHTML;
+        }
     },
     // Adicionar lógicas para as outras telas...
 };

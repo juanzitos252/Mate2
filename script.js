@@ -216,10 +216,13 @@ const screenLogics = {
         const contentEl = document.getElementById('memorization-content');
         let localState = {
             tableNumber: null,
+            // Fase de Codificação
+            encodingStep: 1, // De 1 a 10
+            // Fase de Teste
             questions: [],
             currentQuestionIndex: 0,
-            correctlyAnswered: new Set(),
-            timerId: null
+            errorStack: [], // Pilha de erros para re-teste
+            isReTest: false // Flag para saber se a pergunta atual é um re-teste
         };
 
         async function start() {
@@ -230,8 +233,63 @@ const screenLogics = {
                 return;
             }
             localState.tableNumber = tableToMemorize;
+            localState.encodingStep = 1;
+            showNextEncodingStep();
+        }
+
+        function showNextEncodingStep() {
+            if (localState.encodingStep > 10) {
+                startTestPhase();
+                return;
+            }
+
+            const fator1 = localState.tableNumber;
+            const fator2 = localState.encodingStep;
+            const result = fator1 * fator2;
+
+            contentEl.innerHTML = `
+                <div class="text-center">
+                    <h2>Fase de Codificação: Tabuada do ${fator1}</h2>
+                    <p class="lead">Digite o resultado correto para avançar.</p>
+                    <div class="my-4">
+                        <span class="h3">${fator1} x ${fator2} =</span>
+                        <input type="number" class="form-control form-control-lg d-inline-block w-25 ms-2" id="encoding-input" autofocus>
+                    </div>
+                    <p id="feedback-encoding" class="mt-2" style="height: 24px;"></p>
+                </div>
+            `;
+
+            const input = document.getElementById('encoding-input');
+            input.addEventListener('keyup', (e) => handleEncodingInput(e, result));
+            input.focus();
+        }
+
+        function handleEncodingInput(event, correctResult) {
+            const feedbackEl = document.getElementById('feedback-encoding');
+            if (event.key !== 'Enter') return;
+
+            const input = event.target;
+            const userAnswer = parseInt(input.value);
+
+            if (userAnswer === correctResult) {
+                localState.encodingStep++;
+                showNextEncodingStep();
+            } else {
+                feedbackEl.textContent = 'Tente de novo.';
+                feedbackEl.className = 'text-danger';
+                input.value = '';
+                // Animação de erro para feedback visual
+                input.classList.add('is-invalid');
+                setTimeout(() => {
+                    input.classList.remove('is-invalid');
+                    feedbackEl.textContent = '';
+                }, 1000);
+            }
+        }
+
+        function startTestPhase() {
             generateQuestions();
-            showMemorizationTable();
+            askQuestion();
         }
 
         function generateQuestions() {
@@ -241,89 +299,75 @@ const screenLogics = {
             }
             localState.questions.sort(() => Math.random() - 0.5); // Embaralha as questões
             localState.currentQuestionIndex = 0;
-            localState.correctlyAnswered.clear();
-        }
-
-        function showMemorizationTable() {
-            let tableHTML = `<h2>Memorize a Tabuada do ${localState.tableNumber}</h2><p>Você tem 20 segundos...</p><table class="table">`;
-            for (let i = 1; i <= 10; i++) {
-                tableHTML += `<tr><td>${localState.tableNumber} x ${i}</td><td>=</td><td>${localState.tableNumber * i}</td></tr>`;
-            }
-            tableHTML += '</table>';
-            contentEl.innerHTML = tableHTML;
-
-            if (localState.timerId) clearTimeout(localState.timerId);
-            localState.timerId = setTimeout(askQuestion, 20000);
+            localState.errorStack = [];
         }
 
         function askQuestion() {
-            if (localState.correctlyAnswered.size === 10) {
+            // Condição de término: ambas as listas estão vazias
+            if (localState.currentQuestionIndex >= localState.questions.length && localState.errorStack.length === 0) {
                 contentEl.innerHTML = `
                     <h2>Parabéns!</h2>
                     <p>Você dominou a tabuada do ${localState.tableNumber}!</p>
-                    <p>Vamos para a próxima.</p>
-                    <button class="btn btn-primary" id="next-table-btn">Próxima Tabuada</button>
+                    <p>Continue praticando para se tornar um mestre!</p>
+                    <button class="btn btn-primary mt-3" id="next-table-btn">Memorizar Outra Tabuada</button>
                 `;
                 document.getElementById('next-table-btn').addEventListener('click', start);
                 return;
             }
 
-            // Encontra a próxima questão que ainda não foi respondida corretamente
-            let questionFound = false;
-            while(localState.currentQuestionIndex < localState.questions.length) {
-                const currentFator2 = localState.questions[localState.currentQuestionIndex].fator2;
-                if (!localState.correctlyAnswered.has(currentFator2)) {
-                    questionFound = true;
-                    break;
-                }
+            let question;
+            localState.isReTest = false;
+
+            // Decide se pega uma questão da pilha de erros ou da lista principal
+            const shouldPickFromErrorStack = localState.errorStack.length > 0 && Math.random() < 0.7;
+
+            if (shouldPickFromErrorStack) {
+                question = localState.errorStack.shift(); // Pega o primeiro erro da fila
+                localState.isReTest = true;
+            } else if (localState.currentQuestionIndex < localState.questions.length) {
+                question = localState.questions[localState.currentQuestionIndex];
                 localState.currentQuestionIndex++;
-            }
-             // Se todas as questões restantes já foram acertadas, reinicia o índice
-            if (!questionFound) {
-                localState.currentQuestionIndex = 0;
-                 while(localState.currentQuestionIndex < localState.questions.length) {
-                    const currentFator2 = localState.questions[localState.currentQuestionIndex].fator2;
-                    if (!localState.correctlyAnswered.has(currentFator2)) {
-                        break;
-                    }
-                    localState.currentQuestionIndex++;
-                }
+            } else {
+                 // Caso a lista principal tenha acabado mas a pilha de erros ainda não
+                question = localState.errorStack.shift();
+                localState.isReTest = true;
             }
 
 
-            const question = localState.questions[localState.currentQuestionIndex];
             const questionText = `${question.fator1} x ${question.fator2} = ?`;
             contentEl.innerHTML = `
                 <h2>Teste de Memorização</h2>
-                <h3>${questionText}</h3>
-                <input type="number" class="form-control w-50 mx-auto" id="memorization-answer">
+                <h3 class="my-4">${questionText}</h3>
+                <input type="number" class="form-control w-50 mx-auto" id="memorization-answer" autofocus>
                 <button class="btn btn-primary mt-3" id="submit-answer-btn">Responder</button>
-                <p id="feedback-memorization" class="mt-2"></p>
+                <p id="feedback-memorization" class="mt-2" style="height: 24px;"></p>
             `;
 
             const answerInput = document.getElementById('memorization-answer');
             const submitBtn = document.getElementById('submit-answer-btn');
-            const feedbackEl = document.getElementById('feedback-memorization');
 
             const submitAnswer = () => {
                 const userAnswer = parseInt(answerInput.value);
                 const isCorrect = userAnswer === question.answer;
 
+                // Registra a resposta com o modo 'memorizacao'
                 apiCall('registrar_resposta', {fator1: question.fator1, fator2: question.fator2}, isCorrect, null, 'memorizacao');
                 submitBtn.disabled = true;
                 answerInput.disabled = true;
 
+                const feedbackEl = document.getElementById('feedback-memorization');
                 if (isCorrect) {
                     feedbackEl.textContent = 'Correto!';
                     feedbackEl.className = 'text-success';
-                    localState.correctlyAnswered.add(question.fator2);
-                    localState.currentQuestionIndex++;
-                    setTimeout(askQuestion, 1500);
+                    // Se era um re-teste e acertou, a pergunta é removida permanentemente.
+                    // Se não, ela simplesmente não é adicionada à pilha de erros.
                 } else {
-                    feedbackEl.textContent = `Errado. A resposta é ${question.answer}. Memorize novamente.`;
+                    feedbackEl.textContent = `Errado. A resposta é ${question.answer}.`;
                     feedbackEl.className = 'text-danger';
-                    setTimeout(showMemorizationTable, 2000);
+                    // Adiciona a pergunta errada no final da pilha para ser re-testada
+                    localState.errorStack.push(question);
                 }
+                setTimeout(askQuestion, 1500); // Passa para a próxima pergunta
             };
 
             submitBtn.addEventListener('click', submitAnswer);
@@ -333,6 +377,7 @@ const screenLogics = {
             answerInput.focus();
         }
 
+        // Inicia o fluxo
         start();
     },
 };

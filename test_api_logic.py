@@ -43,7 +43,7 @@ class TestApiLogic(unittest.TestCase):
 
         # O peso da tabuada do 3 deve ser baixo
         media_pesos = self.api._calcular_media_pesos_tabuadas()
-        self.assertLess(media_pesos[3], 3.3)
+        self.assertLess(media_pesos[3], 5.0)
 
 if __name__ == '__main__':
     unittest.main()

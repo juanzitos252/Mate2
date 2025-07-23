@@ -1,0 +1,2 @@
+
+(pywebview_main.py:7406): dbind-WARNING **: 19:15:21.362: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files

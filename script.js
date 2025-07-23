@@ -22,116 +22,6 @@ const app = document.getElementById('app');
 const themeToggle = document.getElementById('theme-toggle');
 const body = document.body;
 
-// Funções de template para renderizar as telas
-const templates = {
-    home: () => `
-        <div class="container text-center">
-            <h1>Quiz Mestre da Tabuada</h1>
-            <p>Aprenda e memorize a tabuada de forma divertida e adaptativa!</p>
-            <div class="d-grid gap-2 col-6 mx-auto">
-                <button class="btn btn-primary" data-route="quiz">Iniciar Quiz</button>
-                <button class="btn btn-primary" data-route="quiz_invertido">Quiz Invertido</button>
-                <button class="btn btn-primary" data-route="treino">Modo Treino</button>
-                <button class="btn btn-primary" data-route="memorizacao">Modo Memorização</button>
-                <button class="btn btn-primary" data-route="quiz_cronometrado">Modo Cronometrado</button>
-                <hr>
-                <button class="btn btn-secondary" data-route="formula_quiz_setup">Quiz com Fórmulas</button>
-                <button class="btn btn-info" data-route="estatisticas">Estatísticas</button>
-            </div>
-        </div>
-    `,
-    quiz: () => `
-        <div class="container text-center">
-            <h1 id="question"></h1>
-            <div id="options" class="row"></div>
-            <p id="feedback"></p>
-            <button class="btn btn-secondary" id="next-question" style="display: none;">Próxima Pergunta</button>
-            <button class="btn btn-secondary" data-route="home">Voltar ao Menu</button>
-        </div>
-    `,
-    quiz_invertido: () => `
-        <div class="container text-center">
-            <h1 id="question-inv"></h1>
-            <div id="options-inv" class="row"></div>
-            <p id="feedback-inv"></p>
-            <button class="btn btn-secondary" id="next-question-inv" style="display: none;">Próxima Pergunta</button>
-            <button class="btn btn-secondary" data-route="home">Voltar ao Menu</button>
-        </div>
-    `,
-    treino: () => `
-        <div class="container text-center">
-            <h1>Modo Treino</h1>
-            <h2 id="training-title"></h2>
-            <div id="training-table"></div>
-            <button class="btn btn-primary" id="check-answers">Verificar Respostas</button>
-            <p id="training-summary"></p>
-            <button class="btn btn-secondary" data-route="home">Voltar ao Menu</button>
-        </div>
-    `,
-    estatisticas: () => `
-        <div class="container">
-            <h1 class="text-center">Estatísticas de Desempenho</h1>
-            <div id="stats-general" class="card mb-4"></div>
-            <div class="row">
-                <div class="col-lg-6">
-                    <div id="stats-proficiency" class="card mb-4"></div>
-                </div>
-                <div class="col-lg-6">
-                    <div id="stats-heatmap" class="card mb-4"></div>
-                </div>
-            </div>
-            <div id="stats-details" class="card mb-4"></div>
-            <div id="stats-by-table" class="card"></div>
-            <div class="text-center mt-4">
-                <button class="btn btn-secondary" data-route="home">Voltar ao Menu</button>
-            </div>
-        </div>
-    `,
-    formula_quiz_setup: () => `
-        <div class="container text-center">
-            <h1>Quiz com Fórmulas</h1>
-            <div class="mb-3">
-                <label for="quiz-config-name" class="form-label">Nome para esta Configuração</label>
-                <input type="text" class="form-control" id="quiz-config-name" placeholder="Ex: Treino Quadrado da Soma">
-            </div>
-            <div class="mb-3">
-                <label for="formula-type" class="form-label">Selecione a Fórmula</label>
-                <select class="form-select" id="formula-type"></select>
-            </div>
-            <div id="variable-ranges" class="row mb-3"></div>
-            <button class="btn btn-primary" id="save-quiz-config">Salvar Configuração</button>
-            <hr>
-            <div class="mb-3">
-                <label for="saved-quiz-configs" class="form-label">Carregar Configuração Salva</label>
-                <select class="form-select" id="saved-quiz-configs"></select>
-            </div>
-            <button class="btn btn-success" id="start-quiz-with-saved-config">Iniciar Quiz</button>
-            <p id="feedback-formula"></p>
-            <button class="btn btn-secondary" data-route="home">Voltar ao Menu</button>
-        </div>
-    `,
-    quiz_cronometrado: () => `
-        <div class="container text-center">
-            <h1>Modo Cronometrado</h1>
-            <div class="row">
-                <div class="col"><h2 id="score">Pontuação: 0</h2></div>
-                <div class="col"><h2 id="timer">Tempo: 60</h2></div>
-            </div>
-            <h1 id="question-timed"></h1>
-            <input type="number" class="form-control" id="answer-timed" placeholder="Sua resposta">
-            <p id="feedback-timed"></p>
-            <button class="btn btn-primary" id="start-timed-quiz">Iniciar</button>
-            <button class="btn btn-secondary" data-route="home" id="back-to-menu-timed" style="display: none;">Voltar ao Menu</button>
-        </div>
-    `,
-    memorizacao: () => `
-        <div class="container text-center">
-            <h1>Modo Memorização</h1>
-            <div id="memorization-content"></div>
-            <button class="btn btn-secondary" data-route="home">Voltar ao Menu</button>
-        </div>
-    `
-};
 
 // Funções auxiliares
 async function apiCall(func, ...args) {
@@ -150,11 +40,12 @@ async function apiCall(func, ...args) {
 }
 
 function render(templateName) {
-    const template = document.querySelector(`[data-template="${templateName}"]`);
+    const template = document.querySelector(`template[data-template="${templateName}"]`);
     if (template) {
         app.innerHTML = template.innerHTML;
     } else {
         console.error(`Template "${templateName}" não encontrado.`);
+        app.innerHTML = `<div class="alert alert-danger">Erro: Template ${templateName} não encontrado.</div>`;
     }
 }
 

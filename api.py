@@ -3,7 +3,12 @@ import time
 from config import salvar_configuracao, carregar_configuracao, salvar_tema
 
 class Api:
+    """
+    API principal para o Quiz Mestre da Tabuada.
+    Gerencia a lógica do quiz, dados do usuário e estatísticas.
+    """
     def __init__(self):
+        """Inicializa a API, carregando os dados ou criando novos."""
         self.multiplicacoes_data = []
         self.custom_formulas_data = []
         self.pesos_tabuadas = {str(i): 1.0 for i in range(1, 11)}
@@ -13,66 +18,71 @@ class Api:
         self.load_initial_data()
 
     def inicializar_multiplicacoes(self):
-        self.multiplicacoes_data = []
-        for i in range(1, 11):
-            for j in range(1, 11):
-                self.multiplicacoes_data.append({
-                    'fator1': i, 'fator2': j, 'peso': 10.0, 'historico_erros': [],
-                    'vezes_apresentada': 0, 'vezes_correta': 0, 'ultima_vez_apresentada_ts': 0.0
-                })
+        """Cria o conjunto de dados inicial de multiplicações."""
+        self.multiplicacoes_data = [
+            {
+                'fator1': i,
+                'fator2': j,
+                'peso': 10.0,
+                'historico_erros': [],
+                'vezes_apresentada': 0,
+                'vezes_correta': 0,
+                'ultima_vez_apresentada_ts': 0.0,
+                'tempos_resposta': [],
+                'erros_consecutivos': 0
+            }
+            for i in range(1, 11) for j in range(1, 11)
+        ]
+
+    def _calcular_prioridade_pergunta(self, pergunta, agora_ts):
+        """Calcula a prioridade de uma única pergunta."""
+        fator_peso = pergunta.get('peso', 10.0)
+
+        erros = pergunta.get('historico_erros', [])
+        fator_erro_recente = 1.0
+        if erros:
+            erros_recentes = sum(1 for erro in erros if not erro)
+            fator_erro_recente = 1 + (erros_recentes / len(erros))
+
+        fator_novidade = 1 / (1 + pergunta.get('vezes_apresentada', 0) * 0.05)
+
+        prioridade_base = fator_peso * fator_erro_recente * fator_novidade
+
+        fator1 = str(pergunta['fator1'])
+        fator2 = str(pergunta['fator2'])
+        fator_ajuste_tabuada = (self.pesos_tabuadas.get(fator1, 1.0) + self.pesos_tabuadas.get(fator2, 1.0)) / 2
+
+        return prioridade_base * fator_ajuste_tabuada
 
     def selecionar_proxima_pergunta(self):
+        """Seleciona a próxima pergunta a ser feita com base em um algoritmo de prioridade."""
         agora_ts = time.time()
-        perguntas_potenciais = [
-            p for p in self.multiplicacoes_data if (agora_ts - p['ultima_vez_apresentada_ts']) > 30
-        ]
+        perguntas_potenciais = [p for p in self.multiplicacoes_data if (agora_ts - p.get('ultima_vez_apresentada_ts', 0.0)) > 30]
         if not perguntas_potenciais:
             perguntas_potenciais = self.multiplicacoes_data
-        if not perguntas_potenciais: return None
-        perguntas_elegiveis_com_prioridade = []
-        for pergunta_item in perguntas_potenciais:
-            fator_peso = pergunta_item['peso']
-            fator_erro_recente = 1.0
-            if pergunta_item['historico_erros']:
-                erros_recentes = sum(1 for erro in pergunta_item['historico_erros'] if erro)
-                fator_erro_recente = 1 + (erros_recentes / len(pergunta_item['historico_erros']))
-            fator_novidade = 1 / (1 + pergunta_item['vezes_apresentada'] * 0.05)
-            prioridade_base = fator_peso * fator_erro_recente * fator_novidade
-            fator1 = str(pergunta_item['fator1'])
-            fator2 = str(pergunta_item['fator2'])
-            fator_ajuste_tabuada = (self.pesos_tabuadas[fator1] + self.pesos_tabuadas[fator2]) / 2
-            prioridade_final = prioridade_base * fator_ajuste_tabuada
-            perguntas_elegiveis_com_prioridade.append({'prioridade': prioridade_final, 'pergunta_original': pergunta_item})
-        if not perguntas_elegiveis_com_prioridade:
+
+        if not perguntas_potenciais:
+            return None
+
+        prioridades = [self._calcular_prioridade_pergunta(p, agora_ts) for p in perguntas_potenciais]
+
+        if not prioridades:
             return random.choice(self.multiplicacoes_data) if self.multiplicacoes_data else None
-        prioridades = [p['prioridade'] for p in perguntas_elegiveis_com_prioridade]
-        perguntas_originais_refs = [p['pergunta_original'] for p in perguntas_elegiveis_com_prioridade]
-        return random.choices(perguntas_originais_refs, weights=prioridades, k=1)[0]
 
-    def registrar_resposta(self, pergunta_selecionada_ref, acertou: bool, tempo_resposta: float = None):
-        if not pergunta_selecionada_ref: return
+        return random.choices(perguntas_potenciais, weights=prioridades, k=1)[0]
 
-        # Garante que a pergunta tenha todos os campos necessários
-        if 'vezes_apresentada' not in pergunta_selecionada_ref:
-            pergunta_selecionada_ref['vezes_apresentada'] = 0
-        if 'ultima_vez_apresentada_ts' not in pergunta_selecionada_ref:
-            pergunta_selecionada_ref['ultima_vez_apresentada_ts'] = 0.0
-        if 'historico_erros' not in pergunta_selecionada_ref:
-            pergunta_selecionada_ref['historico_erros'] = []
-        if 'vezes_correta' not in pergunta_selecionada_ref:
-            pergunta_selecionada_ref['vezes_correta'] = 0
-        if 'peso' not in pergunta_selecionada_ref:
-            pergunta_selecionada_ref['peso'] = 10.0
+    def _atualizar_dados_resposta(self, pergunta, acertou, tempo_resposta):
+        """Atualiza os dados de uma pergunta com base na resposta."""
+        pergunta['vezes_apresentada'] = pergunta.get('vezes_apresentada', 0) + 1
+        pergunta['ultima_vez_apresentada_ts'] = time.time()
 
-        # Atualiza os dados básicos da pergunta
-        pergunta_selecionada_ref['vezes_apresentada'] += 1
-        pergunta_selecionada_ref['ultima_vez_apresentada_ts'] = time.time()
-        pergunta_selecionada_ref['historico_erros'].append(not acertou)
-        pergunta_selecionada_ref['historico_erros'] = pergunta_selecionada_ref['historico_erros'][-5:]
+        historico = pergunta.get('historico_erros', [])
+        historico.append(acertou)
+        pergunta['historico_erros'] = historico[-5:]
 
-        # Atualiza o peso com base na resposta
         if acertou:
-            pergunta_selecionada_ref['vezes_correta'] += 1
+            pergunta['vezes_correta'] = pergunta.get('vezes_correta', 0) + 1
+            fator_reducao = 0.7
             if tempo_resposta is not None:
                 if tempo_resposta < 2:
                     fator_reducao = 0.5
@@ -80,262 +90,316 @@ class Api:
                     fator_reducao = 0.7
                 else:
                     fator_reducao = 0.9
-            else:
-                fator_reducao = 0.7
-            pergunta_selecionada_ref['peso'] = max(1.0, pergunta_selecionada_ref['peso'] * fator_reducao)
+            pergunta['peso'] = max(1.0, pergunta.get('peso', 10.0) * fator_reducao)
+            pergunta['erros_consecutivos'] = 0
         else:
-            pergunta_selecionada_ref['peso'] = min(100.0, pergunta_selecionada_ref['peso'] * 1.6)
+            pergunta['peso'] = min(100.0, pergunta.get('peso', 10.0) * 1.6)
+            pergunta['erros_consecutivos'] = pergunta.get('erros_consecutivos', 0) + 1
 
-        # Atualiza os pesos das tabuadas
-        fator1 = str(pergunta_selecionada_ref['fator1'])
-        fator2 = str(pergunta_selecionada_ref['fator2'])
-        if acertou:
-            self.pesos_tabuadas[fator1] *= 0.95
-            self.pesos_tabuadas[fator2] *= 0.95
-        else:
-            self.pesos_tabuadas[fator1] = min(100.0, self.pesos_tabuadas[fator1] * 1.1)
-            self.pesos_tabuadas[fator2] = min(100.0, self.pesos_tabuadas[fator2] * 1.1)
-
-        # Processa o tempo de resposta, se fornecido
         if tempo_resposta is not None:
-            if 'tempos_resposta' not in pergunta_selecionada_ref:
-                pergunta_selecionada_ref['tempos_resposta'] = []
-            pergunta_selecionada_ref['tempos_resposta'].append(tempo_resposta)
-            pergunta_selecionada_ref['tempos_resposta'] = pergunta_selecionada_ref['tempos_resposta'][-10:] # Mantém os últimos 10 tempos
+            tempos = pergunta.get('tempos_resposta', [])
+            tempos.append(tempo_resposta)
+            pergunta['tempos_resposta'] = tempos[-10:]
 
-        # Lógica para erros consecutivos
-        if not acertou:
-            pergunta_selecionada_ref['erros_consecutivos'] = pergunta_selecionada_ref.get('erros_consecutivos', 0) + 1
+    def _atualizar_pesos_tabuadas(self, fator1, fator2, acertou):
+        """Atualiza os pesos das tabuadas com base na resposta."""
+        f1_str = str(fator1)
+        f2_str = str(fator2)
+        if acertou:
+            self.pesos_tabuadas[f1_str] = max(0.1, self.pesos_tabuadas.get(f1_str, 1.0) * 0.95)
+            self.pesos_tabuadas[f2_str] = max(0.1, self.pesos_tabuadas.get(f2_str, 1.0) * 0.95)
         else:
-            pergunta_selecionada_ref['erros_consecutivos'] = 0
+            self.pesos_tabuadas[f1_str] = min(100.0, self.pesos_tabuadas.get(f1_str, 1.0) * 1.1)
+            self.pesos_tabuadas[f2_str] = min(100.0, self.pesos_tabuadas.get(f2_str, 1.0) * 1.1)
 
-        salvar_configuracao(self.tema_ativo, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+    def registrar_resposta(self, pergunta_selecionada, acertou: bool, tempo_resposta: float = None):
+        """Registra a resposta do usuário, atualiza os dados e salva a configuração."""
+        if not pergunta_selecionada:
+            return
+
+        # Encontra a referência da pergunta nos dados da API para garantir a modificação
+        pergunta_ref = next((p for p in self.multiplicacoes_data
+                             if p['fator1'] == pergunta_selecionada['fator1'] and
+                                p['fator2'] == pergunta_selecionada['fator2']), None)
+
+        if pergunta_ref:
+            self._atualizar_dados_resposta(pergunta_ref, acertou, tempo_resposta)
+            self._atualizar_pesos_tabuadas(pergunta_ref['fator1'], pergunta_ref['fator2'], acertou)
+            self.salvar_dados()
 
     def gerar_opcoes(self, fator1: int, fator2: int):
+        """Gera 4 opções de resposta para uma pergunta, incluindo a correta."""
         resposta_correta = fator1 * fator2
         opcoes = {resposta_correta}
-        tentativas_max = 30
-        count_tentativas = 0
-        while len(opcoes) < 4 and count_tentativas < tentativas_max:
-            count_tentativas += 1
+
+        # Tenta adicionar opções com base em variações
+        self._adicionar_opcoes_variadas(opcoes, fator1, fator2, resposta_correta)
+
+        # Preenche com opções aleatórias se necessário
+        self._preencher_opcoes_restantes(opcoes, resposta_correta)
+
+        lista_opcoes = list(opcoes)
+        random.shuffle(lista_opcoes)
+        return lista_opcoes
+
+    def _adicionar_opcoes_variadas(self, opcoes, fator1, fator2, resposta_correta):
+        """Adiciona opções de resposta variadas (adjacentes, próximas, etc.)."""
+        tentativas = 0
+        while len(opcoes) < 4 and tentativas < 30:
             tipo_variacao = random.choice(['fator_adjacente', 'resultado_proximo', 'aleatorio_da_lista'])
             nova_opcao = -1
             if tipo_variacao == 'fator_adjacente':
-                fator_modificado = random.choice([1, 2])
-                if fator_modificado == 1:
+                if random.choice([True, False]):
                     f1_mod = max(1, fator1 + random.choice([-2, -1, 1, 2]))
                     nova_opcao = f1_mod * fator2
                 else:
                     f2_mod = max(1, fator2 + random.choice([-2, -1, 1, 2]))
                     nova_opcao = fator1 * f2_mod
             elif tipo_variacao == 'resultado_proximo':
-                offset_options = [-1, 1, -2, 2, -3, 3]
-                if fator1 > 1: offset_options.extend([-fator1 // 2, fator1 // 2])
-                if fator2 > 1: offset_options.extend([-fator2 // 2, fator2 // 2])
-                if not offset_options: offset_options = [-1, 1]
-                offset = random.choice(offset_options)
-                if offset == 0: offset = random.choice([-1, 1]) if offset_options != [-1, 1] else 1
+                offset = random.choice([-3, -2, -1, 1, 2, 3])
                 nova_opcao = resposta_correta + offset
-            elif tipo_variacao == 'aleatorio_da_lista':
-                if self.multiplicacoes_data:
-                    pergunta_aleatoria = random.choice(self.multiplicacoes_data)
-                    nova_opcao = pergunta_aleatoria['fator1'] * pergunta_aleatoria['fator2']
-            if nova_opcao == resposta_correta: continue
-            if nova_opcao > 0: opcoes.add(nova_opcao)
+            elif tipo_variacao == 'aleatorio_da_lista' and self.multiplicacoes_data:
+                pergunta_aleatoria = random.choice(self.multiplicacoes_data)
+                nova_opcao = pergunta_aleatoria['fator1'] * pergunta_aleatoria['fator2']
+
+            if nova_opcao > 0 and nova_opcao != resposta_correta:
+                opcoes.add(nova_opcao)
+            tentativas += 1
+
+    def _preencher_opcoes_restantes(self, opcoes, resposta_correta):
+        """Preenche as opções de resposta restantes para garantir que haja 4."""
         idx = 1
         while len(opcoes) < 4:
-            alternativa = resposta_correta + idx
-            if alternativa not in opcoes and alternativa > 0: opcoes.add(alternativa)
-            if len(opcoes) < 4:
-                alternativa_neg = resposta_correta - idx
-                if alternativa_neg > 0 and alternativa_neg not in opcoes: opcoes.add(alternativa_neg)
+            if resposta_correta + idx not in opcoes:
+                opcoes.add(resposta_correta + idx)
+            if len(opcoes) < 4 and resposta_correta - idx > 0 and resposta_correta - idx not in opcoes:
+                opcoes.add(resposta_correta - idx)
             idx += 1
-            if idx > max(fator1, fator2, 10) + 20: break
-        while len(opcoes) < 4:
-            rand_num = random.randint(1, max(100, resposta_correta + 30))
-            if rand_num > 0 and rand_num not in opcoes: opcoes.add(rand_num)
-        lista_opcoes = list(opcoes)
-        random.shuffle(lista_opcoes)
-        return lista_opcoes
+            if idx > 50:  # Evita loop infinito
+                break
 
-    def gerar_opcoes_quiz_invertido(self, multiplicacao_base_ref):
-        resposta_correta_valor = multiplicacao_base_ref['fator1'] * multiplicacao_base_ref['fator2']
-        opcao_correta_obj = {'texto': f"{multiplicacao_base_ref['fator1']} x {multiplicacao_base_ref['fator2']}", 'original_ref': multiplicacao_base_ref, 'is_correct': True}
-        opcoes_geradas = [opcao_correta_obj]
-        candidatos_embaralhados = random.sample(self.multiplicacoes_data, len(self.multiplicacoes_data))
-        for item_candidato in candidatos_embaralhados:
-            if len(opcoes_geradas) >= 4: break
-            if item_candidato['fator1'] == multiplicacao_base_ref['fator1'] and item_candidato['fator2'] == multiplicacao_base_ref['fator2']: continue
-            if item_candidato['fator1'] * item_candidato['fator2'] == resposta_correta_valor: continue
-            opcoes_geradas.append({'texto': f"{item_candidato['fator1']} x {item_candidato['fator2']}", 'original_ref': item_candidato, 'is_correct': False})
+        # Fallback final para garantir 4 opções
+        while len(opcoes) < 4:
+            rand_num = random.randint(1, max(100, resposta_correta + 20))
+            if rand_num > 0 and rand_num not in opcoes:
+                opcoes.add(rand_num)
+
+    def gerar_opcoes_quiz_invertido(self, multiplicacao_base):
+        """Gera opções para o modo de quiz invertido."""
+        resposta_correta_valor = multiplicacao_base['fator1'] * multiplicacao_base['fator2']
+        opcao_correta = {'texto': f"{multiplicacao_base['fator1']} x {multiplicacao_base['fator2']}", 'is_correct': True}
+
+        opcoes = [opcao_correta]
+        candidatos = [item for item in self.multiplicacoes_data
+                      if item['fator1'] * item['fator2'] != resposta_correta_valor and
+                         (item['fator1'] != multiplicacao_base['fator1'] or item['fator2'] != multiplicacao_base['fator2'])]
+
+        random.shuffle(candidatos)
+
+        for candidato in candidatos:
+            if len(opcoes) >= 4:
+                break
+            opcoes.append({'texto': f"{candidato['fator1']} x {candidato['fator2']}", 'is_correct': False})
+
+        # Fallback se não houver candidatos suficientes
         tentativas_fallback = 0
-        while len(opcoes_geradas) < 4 and tentativas_fallback < 50:
-            tentativas_fallback += 1
+        while len(opcoes) < 4 and tentativas_fallback < 50:
             f1, f2 = random.randint(1, 10), random.randint(1, 10)
-            if (f1 == multiplicacao_base_ref['fator1'] and f2 == multiplicacao_base_ref['fator2']) or (f1 * f2 == resposta_correta_valor): continue
-            existe = any((op['original_ref']['fator1'] == f1 and op['original_ref']['fator2'] == f2) or \
-                         (op['original_ref']['fator1'] == f2 and op['original_ref']['fator2'] == f1) for op in opcoes_geradas)
-            if existe: continue
-            dummy_ref = {'fator1': f1, 'fator2': f2, 'peso': 10.0, 'historico_erros': [], 'vezes_apresentada': 0, 'vezes_correta': 0, 'ultima_vez_apresentada_ts': 0.0}
-            opcoes_geradas.append({'texto': f"{f1} x {f2}", 'original_ref': dummy_ref, 'is_correct': False})
-        random.shuffle(opcoes_geradas)
-        return opcoes_geradas[:4]
+            if f1 * f2 != resposta_correta_valor and not any(op['texto'] == f"{f1} x {f2}" for op in opcoes):
+                opcoes.append({'texto': f"{f1} x {f2}", 'is_correct': False})
+            tentativas_fallback += 1
+
+        random.shuffle(opcoes)
+        return opcoes[:4]
 
     def sugerir_tabuada_para_treino(self):
-        if not self.multiplicacoes_data: return random.randint(1,10)
-        pesos_por_tabuada = {i: 0.0 for i in range(1, 11)}
-        contagem_por_tabuada = {i: 0 for i in range(1, 11)}
-        for item in self.multiplicacoes_data:
-            fator1, fator2, peso = item['fator1'], item['fator2'], item['peso']
-            if fator1 in pesos_por_tabuada:
-                pesos_por_tabuada[fator1] += peso; contagem_por_tabuada[fator1] += 1
-            if fator2 in pesos_por_tabuada and fator1 != fator2:
-                pesos_por_tabuada[fator2] += peso; contagem_por_tabuada[fator2] += 1
-        media_pesos = { tab: pesos_por_tabuada[tab] / contagem_por_tabuada[tab] if contagem_por_tabuada[tab] > 0 else 0 for tab in pesos_por_tabuada }
-        if not any(v > 0 for v in media_pesos.values()): return random.randint(1,10)
+        """Sugere uma tabuada para o modo de treino com base nos pesos."""
+        if not self.multiplicacoes_data:
+            return random.randint(1, 10)
+
+        media_pesos = self._calcular_media_pesos_tabuadas()
+        if not any(v > 0 for v in media_pesos.values()):
+            return random.randint(1, 10)
 
         peso_maximo = max(media_pesos.values())
-        tabuadas_com_peso_maximo = [tab for tab, peso in media_pesos.items() if peso == peso_maximo]
+        tabuadas_sugeridas = [tab for tab, peso in media_pesos.items() if peso == peso_maximo]
 
-        return random.choice(tabuadas_com_peso_maximo)
+        return random.choice(tabuadas_sugeridas)
+
+    def _calcular_media_pesos_tabuadas(self):
+        """Calcula a média de pesos para cada tabuada."""
+        pesos_por_tabuada = {i: [] for i in range(1, 11)}
+        for item in self.multiplicacoes_data:
+            f1, f2, peso = item['fator1'], item['fator2'], item.get('peso', 10.0)
+            pesos_por_tabuada[f1].append(peso)
+            if f1 != f2:
+                pesos_por_tabuada[f2].append(peso)
+
+        return {
+            tab: sum(pesos) / len(pesos) if pesos else 0
+            for tab, pesos in pesos_por_tabuada.items()
+        }
 
     def sugerir_tabuada_para_memorizacao(self):
+        """Sugere uma tabuada para o modo de memorização."""
+        # A lógica pode ser a mesma do treino ou diferente no futuro.
         return self.sugerir_tabuada_para_treino()
 
     def calcular_estatisticas_gerais(self):
+        """Calcula e retorna as estatísticas gerais de desempenho."""
         if not self.multiplicacoes_data or all(p.get('vezes_apresentada', 0) == 0 for p in self.multiplicacoes_data):
-            return {
-                'total_respondidas': 0,
-                'percentual_acertos_geral': 0,
-                'top_3_dificeis': [],
-                'tempo_medio_resposta_geral': 0,
-                'questao_mais_lenta': 'N/A',
-                'questao_mais_errada_consecutivamente': 'N/A'
-            }
+            return self._estatisticas_padrao()
 
         total_respondidas = sum(item.get('vezes_apresentada', 0) for item in self.multiplicacoes_data)
         total_acertos = sum(item.get('vezes_correta', 0) for item in self.multiplicacoes_data)
-        percentual_acertos_geral = (total_acertos / total_respondidas * 100) if total_respondidas > 0 else 0
+        percentual_acertos = (total_acertos / total_respondidas * 100) if total_respondidas > 0 else 0
 
-        # Métricas de dificuldade
-        top_dificeis_completo = sorted(self.multiplicacoes_data, key=lambda x: (x.get('peso', 10.0), -x.get('vezes_correta', 0), x.get('vezes_apresentada', 0)), reverse=True)
-        top_3_dificeis_objs = [item for item in top_dificeis_completo if item.get('vezes_apresentada', 0) > 0][:3]
-        top_3_dificeis_formatado = [f"{item['fator1']} x {item['fator2']}" for item in top_3_dificeis_objs]
-
-        # Métricas de tempo de resposta
-        tempos_totais = [t for item in self.multiplicacoes_data for t in item.get('tempos_resposta', [])]
-        tempo_medio_geral = sum(tempos_totais) / len(tempos_totais) if tempos_totais else 0
-
-        questoes_com_tempo_medio = []
-        for item in self.multiplicacoes_data:
-            if item.get('tempos_resposta'):
-                tempo_medio_item = sum(item['tempos_resposta']) / len(item['tempos_resposta'])
-                questoes_com_tempo_medio.append({'item': item, 'tempo_medio': tempo_medio_item})
-
-        questao_mais_lenta_obj = max(questoes_com_tempo_medio, key=lambda x: x['tempo_medio'], default=None)
-        questao_mais_lenta_str = f"{questao_mais_lenta_obj['item']['fator1']} x {questao_mais_lenta_obj['item']['fator2']}" if questao_mais_lenta_obj else "N/A"
-
-        # Métricas de erros consecutivos
-        questoes_com_erros_consecutivos = [item for item in self.multiplicacoes_data if item.get('erros_consecutivos', 0) > 0]
-        questao_mais_errada_obj = max(questoes_com_erros_consecutivos, key=lambda x: x['erros_consecutivos'], default=None)
-        questao_mais_errada_str = f"{questao_mais_errada_obj['fator1']} x {questao_mais_errada_obj['fator2']} ({questao_mais_errada_obj['erros_consecutivos']} erros)" if questao_mais_errada_obj else "N/A"
+        top_3_dificeis = self._get_top_3_dificeis()
+        tempo_medio_geral, questao_mais_lenta = self._get_metricas_tempo()
+        questao_mais_errada = self._get_questao_mais_errada()
 
         return {
             'total_respondidas': total_respondidas,
-            'percentual_acertos_geral': round(percentual_acertos_geral, 1),
-            'top_3_dificeis': top_3_dificeis_formatado,
+            'percentual_acertos_geral': round(percentual_acertos, 1),
+            'top_3_dificeis': top_3_dificeis,
             'tempo_medio_resposta_geral': round(tempo_medio_geral, 2),
-            'questao_mais_lenta': questao_mais_lenta_str,
-            'questao_mais_errada_consecutivamente': questao_mais_errada_str
+            'questao_mais_lenta': questao_mais_lenta,
+            'questao_mais_errada_consecutivamente': questao_mais_errada
         }
 
+    def _estatisticas_padrao(self):
+        """Retorna um dicionário de estatísticas padrão."""
+        return {
+            'total_respondidas': 0, 'percentual_acertos_geral': 0, 'top_3_dificeis': [],
+            'tempo_medio_resposta_geral': 0, 'questao_mais_lenta': 'N/A',
+            'questao_mais_errada_consecutivamente': 'N/A'
+        }
+
+    def _get_top_3_dificeis(self):
+        """Retorna as 3 questões mais difíceis."""
+        questoes_apresentadas = [p for p in self.multiplicacoes_data if p.get('vezes_apresentada', 0) > 0]
+        questoes_apresentadas.sort(key=lambda x: x.get('peso', 10.0), reverse=True)
+        return [f"{item['fator1']} x {item['fator2']}" for item in questoes_apresentadas[:3]]
+
+    def _get_metricas_tempo(self):
+        """Calcula o tempo médio de resposta e a questão mais lenta."""
+        tempos_respostas = [t for item in self.multiplicacoes_data for t in item.get('tempos_resposta', [])]
+        if not tempos_respostas:
+            return 0, "N/A"
+
+        tempo_medio_geral = sum(tempos_respostas) / len(tempos_respostas)
+
+        questoes_com_tempo = [
+            {'item': item, 'tempo_medio': sum(item['tempos_resposta']) / len(item['tempos_resposta'])}
+            for item in self.multiplicacoes_data if item.get('tempos_resposta')
+        ]
+
+        if not questoes_com_tempo:
+            return tempo_medio_geral, "N/A"
+
+        mais_lenta = max(questoes_com_tempo, key=lambda x: x['tempo_medio'])
+        return tempo_medio_geral, f"{mais_lenta['item']['fator1']} x {mais_lenta['item']['fator2']}"
+
+    def _get_questao_mais_errada(self):
+        """Retorna a questão com mais erros consecutivos."""
+        questoes_com_erros = [p for p in self.multiplicacoes_data if p.get('erros_consecutivos', 0) > 0]
+        if not questoes_com_erros:
+            return "N/A"
+
+        mais_errada = max(questoes_com_erros, key=lambda x: x['erros_consecutivos'])
+        return f"{mais_errada['fator1']} x {mais_errada['fator2']} ({mais_errada['erros_consecutivos']} erros)"
+
     def calcular_proficiencia_tabuadas(self):
-        proficiencia_por_tabuada = {i: 0.0 for i in range(1, 11)}
-        if not self.multiplicacoes_data: return proficiencia_por_tabuada
+        """Calcula a proficiência do usuário para cada tabuada."""
+        proficiencia = {i: 0.0 for i in range(1, 11)}
+        if not self.multiplicacoes_data:
+            return proficiencia
 
-        for t in range(1, 11):
-            itens_tabuada_t_apresentados, vistos_para_tabuada_t = [], set()
-            for item_p in self.multiplicacoes_data:
-                par_ordenado = tuple(sorted((item_p['fator1'], item_p['fator2'])))
-                # Considerar apenas itens que foram apresentados
-                if (item_p['fator1'] == t or item_p['fator2'] == t) and \
-                   par_ordenado not in vistos_para_tabuada_t and \
-                   item_p['vezes_apresentada'] > 0:
-                    itens_tabuada_t_apresentados.append(item_p)
-                    vistos_para_tabuada_t.add(par_ordenado)
+        media_pesos = self._calcular_media_pesos_tabuadas()
 
-            if not itens_tabuada_t_apresentados:
-                # Se nenhum item da tabuada foi apresentado, a proficiência é 0
-                proficiencia_por_tabuada[t] = 0.0
-            else:
-                # Calcular a média dos pesos apenas dos itens apresentados
-                media_pesos = sum(it['peso'] for it in itens_tabuada_t_apresentados) / len(itens_tabuada_t_apresentados)
-                # A fórmula de proficiência permanece a mesma, mas baseada em dados relevantes
-                proficiencia_percentual = max(0, (100.0 - media_pesos) / (100.0 - 1.0)) * 100.0
-                proficiencia_por_tabuada[t] = round(proficiencia_percentual, 1)
+        for tab, media in media_pesos.items():
+            if media > 0:
+                # Normaliza o peso (que vai de 1 a 100) para uma proficiência de 0 a 100
+                proficiencia_percentual = max(0, 100 - (media - 1))
+                proficiencia[tab] = round(proficiencia_percentual, 1)
 
-        return proficiencia_por_tabuada
+        return proficiencia
 
     def gerar_dados_heatmap(self):
+        """Gera os dados para o heatmap de dificuldade."""
         if not self.multiplicacoes_data:
-            return [[0]*10 for _ in range(10)], 1.0, 10.0
+            return [[0] * 10 for _ in range(10)], 1.0, 10.0
 
-        heatmap_data = [[10.0]*10 for _ in range(10)]
-        min_peso, max_peso = float('inf'), float('-inf')
+        heatmap_data = [[10.0] * 10 for _ in range(10)]
+        pesos = [item.get('peso', 10.0) for item in self.multiplicacoes_data]
+        min_peso, max_peso = min(pesos) if pesos else 1.0, max(pesos) if pesos else 10.0
 
-        data_dict = {(item['fator1'], item['fator2']): item for item in self.multiplicacoes_data}
+        data_dict = {(item['fator1'], item['fator2']): item.get('peso', 10.0) for item in self.multiplicacoes_data}
 
         for i in range(1, 11):
             for j in range(1, 11):
-                item = data_dict.get((i, j), data_dict.get((j, i)))
-                if item:
-                    peso = item['peso']
-                    heatmap_data[i-1][j-1] = peso
-                    if peso < min_peso:
-                        min_peso = peso
-                    if peso > max_peso:
-                        max_peso = peso
-
-        if min_peso == float('inf'): min_peso = 1.0
-        if max_peso == float('-inf'): max_peso = 10.0
+                heatmap_data[i-1][j-1] = data_dict.get((i, j), data_dict.get((j, i), 10.0))
 
         return heatmap_data, min_peso, max_peso
 
     def get_formula_definitions(self):
+        """Retorna as definições das fórmulas notáveis."""
         return FORMULAS_NOTAVEIS
 
     def get_saved_quiz_configs(self):
+        """Retorna as configurações de quiz salvas."""
         return self.custom_formulas_data
 
     def save_quiz_config(self, config):
+        """Salva uma nova configuração de quiz."""
+        if any(c['name'] == config['name'] for c in self.custom_formulas_data):
+            # Atualiza a configuração existente
+            self.custom_formulas_data = [c for c in self.custom_formulas_data if c['name'] != config['name']]
         self.custom_formulas_data.append(config)
-        salvar_configuracao(self.tema_ativo, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+        self.salvar_dados()
 
     def set_current_custom_formula_for_quiz(self, config_name):
-        self.current_custom_formula_for_quiz = next((cfg for cfg in self.custom_formulas_data if cfg['name'] == config_name), None)
+        """Define a fórmula customizada para o próximo quiz."""
+        self.current_custom_formula_for_quiz = next(
+            (cfg for cfg in self.custom_formulas_data if cfg['name'] == config_name), None
+        )
 
     def save_timed_mode_score(self, score):
+        """Salva a pontuação do modo cronometrado se for um novo recorde."""
         if score > self.pontuacao_maxima_cronometrado:
             self.pontuacao_maxima_cronometrado = score
-            salvar_configuracao(self.tema_ativo, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+            self.salvar_dados()
 
     def salvar_tema(self, tema):
+        """Salva a preferência de tema do usuário."""
         self.tema_ativo = tema
+        # A função salvar_tema em config.py cuida de preservar os outros dados
         salvar_tema(tema)
 
     def load_initial_data(self):
+        """Carrega os dados da configuração ou inicializa se não existirem."""
         config = carregar_configuracao()
         self.tema_ativo = config.get("tema_ativo", "colorido")
-        self.multiplicacoes_data = config.get("multiplicacoes_data")
+        self.multiplicacoes_data = config.get("multiplicacoes_data", [])
         self.custom_formulas_data = config.get("custom_formulas_data", [])
         self.pesos_tabuadas = config.get("pesos_tabuadas", {str(i): 1.0 for i in range(1, 11)})
         self.pontuacao_maxima_cronometrado = config.get("pontuacao_maxima_cronometrado", 0)
 
         if not self.multiplicacoes_data:
             self.inicializar_multiplicacoes()
-            salvar_configuracao(self.tema_ativo, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+            self.salvar_dados()
 
         return config
+
+    def salvar_dados(self):
+        """Salva todos os dados atuais na configuração."""
+        salvar_configuracao(
+            self.tema_ativo,
+            self.multiplicacoes_data,
+            self.custom_formulas_data,
+            self.pesos_tabuadas,
+            self.pontuacao_maxima_cronometrado
+        )
 
 
 FORMULAS_NOTAVEIS = [

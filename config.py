@@ -5,7 +5,7 @@ import os
 CONFIG_DIR = os.path.expanduser("~/.config/QuizApp")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
-def salvar_configuracao(tema, multiplicacoes, formulas, pontuacao_maxima_cronometrado=None):
+def salvar_configuracao(tema, multiplicacoes, formulas, pesos_tabuadas, pontuacao_maxima_cronometrado=None):
     # Garante que o diretório de configuração exista
     os.makedirs(CONFIG_DIR, exist_ok=True)
     """
@@ -22,6 +22,7 @@ def salvar_configuracao(tema, multiplicacoes, formulas, pontuacao_maxima_cronome
             "tema_ativo_nome": tema,
             "multiplicacoes_data": multiplicacoes,
             "custom_formulas_data": formulas,
+            "pesos_tabuadas": pesos_tabuadas,
             "pontuacao_maxima_cronometrado": pontuacao_maxima_cronometrado if pontuacao_maxima_cronometrado is not None else pontuacao_existente
         }
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -40,6 +41,7 @@ def criar_configuracao_padrao():
             "tema_ativo_nome": "colorido", # Um tema padrão
             "multiplicacoes_data": None, # Será inicializado no main.py se for None
             "custom_formulas_data": [], # Começa com nenhuma fórmula personalizada
+            "pesos_tabuadas": {str(i): 1.0 for i in range(1, 11)},
             "pontuacao_maxima_cronometrado": 0
         }
         # A função salvar_configuracao lida com a criação do diretório
@@ -47,6 +49,7 @@ def criar_configuracao_padrao():
             config_padrao["tema_ativo_nome"],
             config_padrao["multiplicacoes_data"],
             config_padrao["custom_formulas_data"],
+            config_padrao["pesos_tabuadas"],
             config_padrao["pontuacao_maxima_cronometrado"]
         )
         return True # Indica que um novo arquivo foi criado
@@ -69,6 +72,7 @@ def carregar_configuracao():
             "tema_ativo": config_data.get("tema_ativo_nome"),
             "multiplicacoes_data": config_data.get("multiplicacoes_data"),
             "custom_formulas_data": config_data.get("custom_formulas_data"),
+            "pesos_tabuadas": config_data.get("pesos_tabuadas", {str(i): 1.0 for i in range(1, 11)}),
             "pontuacao_maxima_cronometrado": config_data.get("pontuacao_maxima_cronometrado", 0)
         }
 
@@ -80,5 +84,6 @@ def carregar_configuracao():
             "tema_ativo": "colorido",
             "multiplicacoes_data": None,
             "custom_formulas_data": [],
+            "pesos_tabuadas": {str(i): 1.0 for i in range(1, 11)},
             "pontuacao_maxima_cronometrado": 0
         }

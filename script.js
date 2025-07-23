@@ -7,11 +7,13 @@ function renderPresentationScreen() {
             <p>Aprenda e memorize a tabuada de forma divertida e adaptativa!</p>
             <div class="d-grid gap-2 col-6 mx-auto">
                 <button class="btn btn-primary" onclick="navigateTo('quiz')">Iniciar Quiz</button>
-                <button class="btn btn-secondary" onclick="navigateTo('quiz_invertido')">Quiz Invertido</button>
+                <button class="btn btn-primary" onclick="navigateTo('quiz_invertido')">Quiz Invertido</button>
                 <button class="btn btn-primary" onclick="navigateTo('treino')">Modo Treino</button>
-                <button class="btn btn-info" onclick="navigateTo('estatisticas')">Estatísticas</button>
-                <button class="btn btn-secondary" onclick="navigateTo('formula_quiz_setup')">Quiz com Fórmulas</button>
+                <button class="btn btn-primary" onclick="navigateTo('memorizacao')">Modo Memorização</button>
                 <button class="btn btn-primary" onclick="navigateTo('quiz_cronometrado')">Modo Cronometrado</button>
+                <hr>
+                <button class="btn btn-secondary" onclick="navigateTo('formula_quiz_setup')">Quiz com Fórmulas</button>
+                <button class="btn btn-info" onclick="navigateTo('estatisticas')">Estatísticas</button>
             </div>
         </div>
     `;
@@ -168,16 +170,25 @@ const routes = {
     'estatisticas': renderEstatisticasScreen,
     'formula_quiz_setup': renderFormulaQuizSetupScreen,
     'quiz_cronometrado': renderQuizCronometradoScreen,
+    'memorizacao': renderMemorizationScreen,
 };
 
 function navigateTo(route) {
-    location.hash = route;
+    app.classList.add('fade-out');
+    setTimeout(() => {
+        location.hash = route;
+        app.classList.remove('fade-out');
+    }, 500);
 }
 
 function router() {
     const route = location.hash.substring(1) || '';
     const renderFunction = routes[route] || renderPresentationScreen;
-    renderFunction();
+    app.classList.add('fade-out');
+    setTimeout(() => {
+        renderFunction();
+        app.classList.remove('fade-out');
+    }, 500);
 }
 
 async function loadQuizQuestion() {
@@ -206,12 +217,16 @@ async function loadQuizQuestion() {
     const correctAnswer = questionData.fator1 * questionData.fator2;
     const options = await window.pywebview.api.gerar_opcoes(questionData.fator1, questionData.fator2);
 
+    let startTime = new Date().getTime();
+
     const buttons = [option1El, option2El, option3El, option4El];
     buttons.forEach((button, index) => {
         button.textContent = options[index];
         button.onclick = () => {
+            const endTime = new Date().getTime();
+            const responseTime = (endTime - startTime) / 1000;
             const isCorrect = parseInt(button.textContent) === correctAnswer;
-            window.pywebview.api.registrar_resposta(questionData, isCorrect);
+            window.pywebview.api.registrar_resposta(questionData, isCorrect, responseTime);
             feedbackEl.textContent = isCorrect ? 'Correto!' : `Errado! A resposta era ${correctAnswer}`;
             nextQuestionEl.style.display = 'block';
             buttons.forEach(btn => btn.disabled = true);
@@ -249,12 +264,16 @@ async function loadQuizInvertidoQuestion() {
     const correctAnswer = `${questionData.fator1} x ${questionData.fator2}`;
     const options = await window.pywebview.api.gerar_opcoes_quiz_invertido(questionData);
 
+    let startTime = new Date().getTime();
+
     const buttons = [option1El, option2El, option3El, option4El];
     buttons.forEach((button, index) => {
         button.textContent = options[index].texto;
         button.onclick = () => {
+            const endTime = new Date().getTime();
+            const responseTime = (endTime - startTime) / 1000;
             const isCorrect = button.textContent === correctAnswer;
-            window.pywebview.api.registrar_resposta(questionData, isCorrect);
+            window.pywebview.api.registrar_resposta(questionData, isCorrect, responseTime);
             feedbackEl.textContent = isCorrect ? 'Correto!' : `Errado! A resposta era ${correctAnswer}`;
             nextQuestionEl.style.display = 'block';
             buttons.forEach(btn => btn.disabled = true);
@@ -278,7 +297,8 @@ async function loadTrainingTable() {
     const inputs = [];
     for (let i = 1; i <= 10; i++) {
         const inputId = `input-${i}`;
-        inputs.push({ id: inputId, fator1: suggestedTable, fator2: i, correctAnswer: suggestedTable * i });
+        const question = { fator1: suggestedTable, fator2: i };
+        inputs.push({ id: inputId, question: question, correctAnswer: suggestedTable * i });
         tableHTML += `
             <tr>
                 <td>${suggestedTable} x ${i} = </td>
@@ -291,6 +311,8 @@ async function loadTrainingTable() {
 
     checkAnswersEl.onclick = () => {
         let correctAnswers = 0;
+        let startTime = new Date().getTime();
+
         inputs.forEach(input => {
             const inputEl = document.getElementById(input.id);
             const isCorrect = parseInt(inputEl.value) === input.correctAnswer;
@@ -301,7 +323,11 @@ async function loadTrainingTable() {
                 inputEl.classList.add('is-invalid');
             }
             inputEl.disabled = true;
-            window.pywebview.api.registrar_resposta({ fator1: input.fator1, fator2: input.fator2 }, isCorrect);
+
+            const endTime = new Date().getTime();
+            const responseTime = (endTime - startTime) / 1000;
+
+            window.pywebview.api.registrar_resposta(input.question, isCorrect, responseTime);
         });
         trainingSummaryEl.textContent = `Você acertou ${correctAnswers} de 10!`;
         checkAnswersEl.disabled = true;
@@ -316,8 +342,17 @@ async function loadStatistics() {
 
     const stats = await window.pywebview.api.calcular_estatisticas_gerais();
     statsSummaryEl.innerHTML = `
-        <p>Total de Perguntas Respondidas: ${stats.total_respondidas}</p>
-        <p>Percentual de Acertos Geral: ${stats.percentual_acertos_geral}%</p>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Total de Perguntas Respondidas:</strong> ${stats.total_respondidas}</p>
+                <p><strong>Percentual de Acertos Geral:</strong> ${stats.percentual_acertos_geral}%</p>
+                <p><strong>Tempo Médio de Resposta:</strong> ${stats.tempo_medio_resposta_geral}s</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Questão Mais Lenta (Média):</strong> ${stats.questao_mais_lenta}</p>
+                <p><strong>Questão com Mais Erros Consecutivos:</strong> ${stats.questao_mais_errada_consecutivamente}</p>
+            </div>
+        </div>
     `;
 
     const heatmapData = await window.pywebview.api.gerar_dados_heatmap();
@@ -346,7 +381,7 @@ async function loadStatistics() {
     }
     proficiencyEl.innerHTML = proficiencyHTML;
 
-    let topDifficultiesHTML = '<h2>Maiores Dificuldades Atuais</h2>';
+    let topDifficultiesHTML = '<h2>Maiores Dificuldades Atuais (Peso)</h2>';
     stats.top_3_dificeis.forEach(item => {
         topDifficultiesHTML += `<p>${item}</p>`;
     });
@@ -476,5 +511,117 @@ async function loadTimedQuiz() {
     };
 }
 
+function renderMemorizationScreen() {
+    app.innerHTML = `
+        <div class="container text-center">
+            <h1>Modo Memorização</h1>
+            <div id="memorization-content"></div>
+            <button class="btn btn-secondary" onclick="navigateTo('home')">Voltar ao Menu</button>
+        </div>
+    `;
+    loadMemorization();
+}
+
+let memorizationState = {};
+
+async function loadMemorization() {
+    const memorizationContentEl = document.getElementById('memorization-content');
+    const tableNumber = await window.pywebview.api.sugerir_tabuada_para_memorizacao();
+
+    memorizationState = {
+        tableNumber: tableNumber,
+        questions: [],
+        currentQuestionIndex: 0,
+        correctAnswers: 0
+    };
+
+    for (let i = 1; i <= 10; i++) {
+        memorizationState.questions.push({ factor1: tableNumber, factor2: i });
+    }
+
+    let tableHTML = `<h2>Memorize a Tabuada do ${tableNumber}</h2>`;
+    tableHTML += '<table class="table table-bordered">';
+    for (let i = 1; i <= 10; i++) {
+        tableHTML += `<tr><td>${tableNumber} x ${i} = ${tableNumber * i}</td></tr>`;
+    }
+    tableHTML += '</table>';
+    memorizationContentEl.innerHTML = tableHTML;
+
+    setTimeout(loadMemorizationQuestion, 20000); // 20 segundos para memorizar
+}
+
+function loadMemorizationQuestion() {
+    const memorizationContentEl = document.getElementById('memorization-content');
+    const question = memorizationState.questions[memorizationState.currentQuestionIndex];
+
+    memorizationContentEl.innerHTML = `
+        <h2>Qual é o resultado de ${question.factor1} x ${question.factor2}?</h2>
+        <input type="number" class="form-control" id="memorization-answer">
+        <button class="btn btn-primary mt-2" id="check-memorization-answer">Responder</button>
+        <p id="memorization-feedback"></p>
+    `;
+
+    const answerEl = document.getElementById('memorization-answer');
+    const checkButton = document.getElementById('check-memorization-answer');
+    const feedbackEl = document.getElementById('memorization-feedback');
+
+    checkButton.onclick = () => {
+        const correctAnswer = question.factor1 * question.factor2;
+        const isCorrect = parseInt(answerEl.value) === correctAnswer;
+
+        window.pywebview.api.registrar_resposta(question, isCorrect, 20);
+
+        if (isCorrect) {
+            memorizationState.correctAnswers++;
+            feedbackEl.textContent = 'Correto!';
+        } else {
+            feedbackEl.textContent = `Errado! A resposta era ${correctAnswer}`;
+        }
+
+        checkButton.disabled = true;
+        answerEl.disabled = true;
+
+        memorizationState.currentQuestionIndex++;
+
+        if (memorizationState.currentQuestionIndex < memorizationState.questions.length) {
+            setTimeout(loadMemorizationQuestion, 2000);
+        } else {
+            if (memorizationState.correctAnswers > 0) {
+                feedbackEl.textContent += ' Parabéns! Você acertou pelo menos uma. Passando para a próxima tabuada.';
+                setTimeout(loadMemorization, 3000);
+            } else {
+                feedbackEl.textContent += ' Fim de jogo! Você não acertou nenhuma questão.';
+            }
+        }
+    };
+}
+
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('intro').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        router();
+    }, 3000); // 3 segundos de introdução
+});
+
+const themeToggle = document.getElementById('theme-toggle');
+const body = document.body;
+
+function setTheme(theme) {
+    body.className = theme;
+    themeToggle.textContent = theme === 'dark-theme' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+}
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = localStorage.getItem('theme') || 'light-theme';
+    const newTheme = currentTheme === 'light-theme' ? 'dark-theme' : 'light-theme';
+    setTheme(newTheme);
+});
+
+window.addEventListener('load', () => {
+    const savedTheme = localStorage.getItem('theme') || 'light-theme';
+    setTheme(savedTheme);
+});
+
 window.addEventListener('hashchange', router);
-window.addEventListener('load',router);

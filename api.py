@@ -52,6 +52,18 @@ class Api:
     def registrar_resposta(self, pergunta_selecionada_ref, acertou: bool, tempo_resposta: float = None):
         if not pergunta_selecionada_ref: return
 
+        # Garante que a pergunta tenha todos os campos necessários
+        if 'vezes_apresentada' not in pergunta_selecionada_ref:
+            pergunta_selecionada_ref['vezes_apresentada'] = 0
+        if 'ultima_vez_apresentada_ts' not in pergunta_selecionada_ref:
+            pergunta_selecionada_ref['ultima_vez_apresentada_ts'] = 0.0
+        if 'historico_erros' not in pergunta_selecionada_ref:
+            pergunta_selecionada_ref['historico_erros'] = []
+        if 'vezes_correta' not in pergunta_selecionada_ref:
+            pergunta_selecionada_ref['vezes_correta'] = 0
+        if 'peso' not in pergunta_selecionada_ref:
+            pergunta_selecionada_ref['peso'] = 10.0
+
         # Atualiza os dados básicos da pergunta
         pergunta_selecionada_ref['vezes_apresentada'] += 1
         pergunta_selecionada_ref['ultima_vez_apresentada_ts'] = time.time()
@@ -181,7 +193,11 @@ class Api:
                 pesos_por_tabuada[fator2] += peso; contagem_por_tabuada[fator2] += 1
         media_pesos = { tab: pesos_por_tabuada[tab] / contagem_por_tabuada[tab] if contagem_por_tabuada[tab] > 0 else 0 for tab in pesos_por_tabuada }
         if not any(v > 0 for v in media_pesos.values()): return random.randint(1,10)
-        return max(media_pesos, key=media_pesos.get)
+
+        peso_maximo = max(media_pesos.values())
+        tabuadas_com_peso_maximo = [tab for tab, peso in media_pesos.items() if peso == peso_maximo]
+
+        return random.choice(tabuadas_com_peso_maximo)
 
     def sugerir_tabuada_para_memorizacao(self):
         return self.sugerir_tabuada_para_treino()

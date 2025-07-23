@@ -5,26 +5,19 @@ import os
 CONFIG_DIR = os.path.expanduser("~/.config/QuizApp")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
-def salvar_configuracao(tema, multiplicacoes, formulas, pesos_tabuadas, pontuacao_maxima_cronometrado=None):
-    # Garante que o diretório de configuração exista
+def salvar_configuracao(tema, multiplicacoes, formulas, pesos_tabuadas, pontuacao_maxima_cronometrado):
+    """
+    Salva toda a configuração do usuário.
+    """
     os.makedirs(CONFIG_DIR, exist_ok=True)
-    """
-    Salva a configuração do usuário, incluindo a pontuação máxima do modo cronometrado.
-    """
+    config_data = {
+        "tema_ativo": tema,
+        "multiplicacoes_data": multiplicacoes,
+        "custom_formulas_data": formulas,
+        "pesos_tabuadas": pesos_tabuadas,
+        "pontuacao_maxima_cronometrado": pontuacao_maxima_cronometrado
+    }
     try:
-        # Primeiro, carrega os dados existentes para não sobrescrever a pontuação
-        # se ela não for passada como argumento.
-        config_existente = carregar_configuracao() if os.path.exists(CONFIG_FILE) else {}
-        pontuacao_existente = config_existente.get("pontuacao_maxima_cronometrado", 0)
-
-
-        config_data = {
-            "tema_ativo_nome": tema,
-            "multiplicacoes_data": multiplicacoes,
-            "custom_formulas_data": formulas,
-            "pesos_tabuadas": pesos_tabuadas,
-            "pontuacao_maxima_cronometrado": pontuacao_maxima_cronometrado if pontuacao_maxima_cronometrado is not None else pontuacao_existente
-        }
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(config_data, f, indent=4, ensure_ascii=False)
     except (IOError, TypeError) as e:
@@ -32,28 +25,22 @@ def salvar_configuracao(tema, multiplicacoes, formulas, pesos_tabuadas, pontuaca
 
 def salvar_tema(tema):
     """
-    Salva apenas a configuração do tema do usuário.
+    Salva apenas a configuração do tema do usuário, preservando os outros dados.
     """
-    try:
-        os.makedirs(CONFIG_DIR, exist_ok=True)
-        config_existente = carregar_configuracao() if os.path.exists(CONFIG_FILE) else {}
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    config_existente = carregar_configuracao()
 
-        # Atualiza o tema na configuração existente
-        config_existente["tema_ativo"] = tema
+    # Atualiza apenas o tema
+    config_existente["tema_ativo"] = tema
 
-        # Salva o objeto de configuração completo de volta no arquivo
-        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-            # Prepara os dados para salvar, garantindo que todas as chaves esperadas estejam presentes
-            config_data_to_save = {
-                "tema_ativo_nome": config_existente.get("tema_ativo"),
-                "multiplicacoes_data": config_existente.get("multiplicacoes_data"),
-                "custom_formulas_data": config_existente.get("custom_formulas_data"),
-                "pesos_tabuadas": config_existente.get("pesos_tabuadas"),
-                "pontuacao_maxima_cronometrado": config_existente.get("pontuacao_maxima_cronometrado")
-            }
-            json.dump(config_data_to_save, f, indent=4, ensure_ascii=False)
-    except (IOError, TypeError) as e:
-        print(f"Erro ao salvar o tema em {CONFIG_FILE}: {e}")
+    # Salva a configuração completa de volta
+    salvar_configuracao(
+        config_existente["tema_ativo"],
+        config_existente["multiplicacoes_data"],
+        config_existente["custom_formulas_data"],
+        config_existente["pesos_tabuadas"],
+        config_existente["pontuacao_maxima_cronometrado"]
+    )
 
 def criar_configuracao_padrao():
     """
@@ -63,7 +50,7 @@ def criar_configuracao_padrao():
         print(f"Arquivo de configuração não encontrado. Criando um novo em {CONFIG_FILE}")
         # Define uma configuração padrão mínima
         config_padrao = {
-            "tema_ativo_nome": "colorido", # Um tema padrão
+            "tema_ativo": "colorido", # Um tema padrão
             "multiplicacoes_data": None, # Será inicializado no main.py se for None
             "custom_formulas_data": [], # Começa com nenhuma fórmula personalizada
             "pesos_tabuadas": {str(i): 1.0 for i in range(1, 11)},
@@ -71,7 +58,7 @@ def criar_configuracao_padrao():
         }
         # A função salvar_configuracao lida com a criação do diretório
         salvar_configuracao(
-            config_padrao["tema_ativo_nome"],
+            config_padrao["tema_ativo"],
             config_padrao["multiplicacoes_data"],
             config_padrao["custom_formulas_data"],
             config_padrao["pesos_tabuadas"],
@@ -94,7 +81,7 @@ def carregar_configuracao():
 
         # Validação básica para garantir que as chaves esperadas estão presentes
         return {
-            "tema_ativo": config_data.get("tema_ativo_nome"),
+            "tema_ativo": config_data.get("tema_ativo"),
             "multiplicacoes_data": config_data.get("multiplicacoes_data"),
             "custom_formulas_data": config_data.get("custom_formulas_data"),
             "pesos_tabuadas": config_data.get("pesos_tabuadas", {str(i): 1.0 for i in range(1, 11)}),

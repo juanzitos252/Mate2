@@ -172,6 +172,7 @@ const routes = {
 
 function navigateTo(route) {
     location.hash = route;
+    router();
 }
 
 function router() {

@@ -171,13 +171,21 @@ const routes = {
 };
 
 function navigateTo(route) {
-    location.hash = route;
+    app.classList.add('fade-out');
+    setTimeout(() => {
+        location.hash = route;
+        app.classList.remove('fade-out');
+    }, 500);
 }
 
 function router() {
     const route = location.hash.substring(1) || '';
     const renderFunction = routes[route] || renderPresentationScreen;
-    renderFunction();
+    app.classList.add('fade-out');
+    setTimeout(() => {
+        renderFunction();
+        app.classList.remove('fade-out');
+    }, 500);
 }
 
 async function loadQuizQuestion() {
@@ -476,5 +484,32 @@ async function loadTimedQuiz() {
     };
 }
 
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('intro').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        router();
+    }, 3000); // 3 segundos de introdução
+});
+
+const themeToggle = document.getElementById('theme-toggle');
+const body = document.body;
+
+function setTheme(theme) {
+    body.className = theme;
+    themeToggle.textContent = theme === 'dark-theme' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+}
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = localStorage.getItem('theme') || 'light-theme';
+    const newTheme = currentTheme === 'light-theme' ? 'dark-theme' : 'light-theme';
+    setTheme(newTheme);
+});
+
+window.addEventListener('load', () => {
+    const savedTheme = localStorage.getItem('theme') || 'light-theme';
+    setTheme(savedTheme);
+});
+
 window.addEventListener('hashchange', router);
-window.addEventListener('load',router);

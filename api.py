@@ -8,7 +8,7 @@ class Api:
         self.custom_formulas_data = []
         self.pesos_tabuadas = {str(i): 1.0 for i in range(1, 11)}
         self.pontuacao_maxima_cronometrado = 0
-        self.tema_ativo_nome = "colorido"
+        self.tema_ativo = "colorido"
         self.current_custom_formula_for_quiz = None
         self.load_initial_data()
 
@@ -109,7 +109,7 @@ class Api:
         else:
             pergunta_selecionada_ref['erros_consecutivos'] = 0
 
-        salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+        salvar_configuracao(self.tema_ativo, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
     def gerar_opcoes(self, fator1: int, fator2: int):
         resposta_correta = fator1 * fator2
@@ -309,7 +309,7 @@ class Api:
 
     def save_quiz_config(self, config):
         self.custom_formulas_data.append(config)
-        salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+        salvar_configuracao(self.tema_ativo, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
     def set_current_custom_formula_for_quiz(self, config_name):
         self.current_custom_formula_for_quiz = next((cfg for cfg in self.custom_formulas_data if cfg['name'] == config_name), None)
@@ -317,15 +317,15 @@ class Api:
     def save_timed_mode_score(self, score):
         if score > self.pontuacao_maxima_cronometrado:
             self.pontuacao_maxima_cronometrado = score
-            salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+            salvar_configuracao(self.tema_ativo, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
     def salvar_tema(self, tema):
-        self.tema_ativo_nome = tema
+        self.tema_ativo = tema
         salvar_tema(tema)
 
     def load_initial_data(self):
         config = carregar_configuracao()
-        self.tema_ativo_nome = config.get("tema_ativo", "colorido")
+        self.tema_ativo = config.get("tema_ativo", "colorido")
         self.multiplicacoes_data = config.get("multiplicacoes_data")
         self.custom_formulas_data = config.get("custom_formulas_data", [])
         self.pesos_tabuadas = config.get("pesos_tabuadas", {str(i): 1.0 for i in range(1, 11)})
@@ -333,7 +333,7 @@ class Api:
 
         if not self.multiplicacoes_data:
             self.inicializar_multiplicacoes()
-            salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+            salvar_configuracao(self.tema_ativo, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
         return config
 

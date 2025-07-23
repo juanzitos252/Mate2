@@ -10,8 +10,6 @@ Um aplicativo de quiz divertido e adaptativo para aprender e memorizar a tabuada
 - **Estatísticas:** Acompanhe seu progresso com estatísticas detalhadas, incluindo um heatmap de dificuldades e proficiência por tabuada.
 - **Quiz com Fórmulas Notáveis:** Crie ou selecione um quiz baseado em fórmulas notáveis da matemática.
 - **Modo Cronometrado:** Teste sua velocidade e precisão respondendo o máximo de perguntas que puder em um tempo limitado.
-- **Temas Personalizáveis:** Escolha entre diferentes temas para personalizar a aparência do aplicativo.
-- **Atualização Automática:** O aplicativo verifica se há novas versões e permite que você atualize com um único clique.
 
 ## Como usar
 
@@ -25,7 +23,7 @@ Um aplicativo de quiz divertido e adaptativo para aprender e memorizar a tabuada
     ```
 3.  **Execute o aplicativo:**
     ```bash
-    python main.py
+    python pywebview_main.py
     ```
 
 ## Contribuições

@@ -37,8 +37,23 @@ def main():
         # This is a placeholder, we'll need to find a way to close the pywebview app
         # For now, we'll assume it's closed and just replace the files
 
+        # Stash local changes
+        if repo.is_dirty(untracked_files=True):
+            print("Stashing local changes...")
+            repo.git.stash()
+
         # Pull the latest changes
         origin.pull()
+
+        # Apply stashed changes
+        try:
+            print("Applying stashed changes...")
+            repo.git.stash('pop')
+        except git.exc.GitCommandError as e:
+            if "No stash entries found" in str(e):
+                print("No stashed changes to apply.")
+            else:
+                raise e
 
         # Restart the application
         subprocess.Popen([sys.executable, 'pywebview_main.py'])

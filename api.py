@@ -44,17 +44,34 @@ class Api:
         perguntas_originais_refs = [p['pergunta_original'] for p in perguntas_elegiveis_com_prioridade]
         return random.choices(perguntas_originais_refs, weights=prioridades, k=1)[0]
 
-    def registrar_resposta(self, pergunta_selecionada_ref, acertou: bool):
+    def registrar_resposta(self, pergunta_selecionada_ref, acertou: bool, tempo_resposta: float = None):
         if not pergunta_selecionada_ref: return
+
+        # Atualiza os dados básicos da pergunta
         pergunta_selecionada_ref['vezes_apresentada'] += 1
         pergunta_selecionada_ref['ultima_vez_apresentada_ts'] = time.time()
         pergunta_selecionada_ref['historico_erros'].append(not acertou)
         pergunta_selecionada_ref['historico_erros'] = pergunta_selecionada_ref['historico_erros'][-5:]
+
+        # Atualiza o peso com base na resposta
         if acertou:
             pergunta_selecionada_ref['vezes_correta'] += 1
             pergunta_selecionada_ref['peso'] = max(1.0, pergunta_selecionada_ref['peso'] * 0.7)
         else:
             pergunta_selecionada_ref['peso'] = min(100.0, pergunta_selecionada_ref['peso'] * 1.6)
+
+        # Processa o tempo de resposta, se fornecido
+        if tempo_resposta is not None:
+            if 'tempos_resposta' not in pergunta_selecionada_ref:
+                pergunta_selecionada_ref['tempos_resposta'] = []
+            pergunta_selecionada_ref['tempos_resposta'].append(tempo_resposta)
+            pergunta_selecionada_ref['tempos_resposta'] = pergunta_selecionada_ref['tempos_resposta'][-10:] # Mantém os últimos 10 tempos
+
+        # Lógica para erros consecutivos
+        if not acertou:
+            pergunta_selecionada_ref['erros_consecutivos'] = pergunta_selecionada_ref.get('erros_consecutivos', 0) + 1
+        else:
+            pergunta_selecionada_ref['erros_consecutivos'] = 0
 
         salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pontuacao_maxima_cronometrado)
 
@@ -143,14 +160,47 @@ class Api:
         return max(media_pesos, key=media_pesos.get)
 
     def calcular_estatisticas_gerais(self):
-        if not self.multiplicacoes_data: return {'total_respondidas': 0, 'percentual_acertos_geral': 0, 'top_3_dificeis': []}
+        if not self.multiplicacoes_data:
+            return {
+                'total_respondidas': 0, 'percentual_acertos_geral': 0, 'top_3_dificeis': [],
+                'tempo_medio_resposta_geral': 0, 'questao_mais_lenta': 'N/A', 'questao_mais_errada_consecutivamente': 'N/A'
+            }
+
         total_respondidas = sum(item['vezes_apresentada'] for item in self.multiplicacoes_data)
         total_acertos = sum(item['vezes_correta'] for item in self.multiplicacoes_data)
         percentual_acertos_geral = (total_acertos / total_respondidas * 100) if total_respondidas > 0 else 0
-        top_dificeis_completo = sorted(self.multiplicacoes_data, key=lambda x: (x['peso'], -x['vezes_correta'], x['vezes_apresentada']), reverse=True)
-        top_3_dificeis_objs = [item for item in top_dificeis_completo if item['vezes_apresentada'] > 0][:3]
+
+        # Métricas de dificuldade
+        top_dificeis_completo = sorted(self.multiplicacoes_data, key=lambda x: (x.get('peso', 10.0), -x.get('vezes_correta', 0), x.get('vezes_apresentada', 0)), reverse=True)
+        top_3_dificeis_objs = [item for item in top_dificeis_completo if item.get('vezes_apresentada', 0) > 0][:3]
         top_3_dificeis_formatado = [f"{item['fator1']} x {item['fator2']}" for item in top_3_dificeis_objs]
-        return {'total_respondidas': total_respondidas, 'percentual_acertos_geral': round(percentual_acertos_geral, 1), 'top_3_dificeis': top_3_dificeis_formatado}
+
+        # Métricas de tempo de resposta
+        tempos_totais = [t for item in self.multiplicacoes_data for t in item.get('tempos_resposta', [])]
+        tempo_medio_geral = sum(tempos_totais) / len(tempos_totais) if tempos_totais else 0
+
+        questoes_com_tempo_medio = []
+        for item in self.multiplicacoes_data:
+            if item.get('tempos_resposta'):
+                tempo_medio_item = sum(item['tempos_resposta']) / len(item['tempos_resposta'])
+                questoes_com_tempo_medio.append({'item': item, 'tempo_medio': tempo_medio_item})
+
+        questao_mais_lenta_obj = max(questoes_com_tempo_medio, key=lambda x: x['tempo_medio'], default=None)
+        questao_mais_lenta_str = f"{questao_mais_lenta_obj['item']['fator1']} x {questao_mais_lenta_obj['item']['fator2']}" if questao_mais_lenta_obj else "N/A"
+
+        # Métricas de erros consecutivos
+        questoes_com_erros_consecutivos = [item for item in self.multiplicacoes_data if item.get('erros_consecutivos', 0) > 0]
+        questao_mais_errada_obj = max(questoes_com_erros_consecutivos, key=lambda x: x['erros_consecutivos'], default=None)
+        questao_mais_errada_str = f"{questao_mais_errada_obj['fator1']} x {questao_mais_errada_obj['fator2']} ({questao_mais_errada_obj['erros_consecutivos']} erros)" if questao_mais_errada_obj else "N/A"
+
+        return {
+            'total_respondidas': total_respondidas,
+            'percentual_acertos_geral': round(percentual_acertos_geral, 1),
+            'top_3_dificeis': top_3_dificeis_formatado,
+            'tempo_medio_resposta_geral': round(tempo_medio_geral, 2),
+            'questao_mais_lenta': questao_mais_lenta_str,
+            'questao_mais_errada_consecutivamente': questao_mais_errada_str
+        }
 
     def calcular_proficiencia_tabuadas(self):
         proficiencia_por_tabuada = {i: 0.0 for i in range(1, 11)}

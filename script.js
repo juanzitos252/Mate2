@@ -214,12 +214,16 @@ async function loadQuizQuestion() {
     const correctAnswer = questionData.fator1 * questionData.fator2;
     const options = await window.pywebview.api.gerar_opcoes(questionData.fator1, questionData.fator2);
 
+    let startTime = new Date().getTime();
+
     const buttons = [option1El, option2El, option3El, option4El];
     buttons.forEach((button, index) => {
         button.textContent = options[index];
         button.onclick = () => {
+            const endTime = new Date().getTime();
+            const responseTime = (endTime - startTime) / 1000;
             const isCorrect = parseInt(button.textContent) === correctAnswer;
-            window.pywebview.api.registrar_resposta(questionData, isCorrect);
+            window.pywebview.api.registrar_resposta(questionData, isCorrect, responseTime);
             feedbackEl.textContent = isCorrect ? 'Correto!' : `Errado! A resposta era ${correctAnswer}`;
             nextQuestionEl.style.display = 'block';
             buttons.forEach(btn => btn.disabled = true);
@@ -257,12 +261,16 @@ async function loadQuizInvertidoQuestion() {
     const correctAnswer = `${questionData.fator1} x ${questionData.fator2}`;
     const options = await window.pywebview.api.gerar_opcoes_quiz_invertido(questionData);
 
+    let startTime = new Date().getTime();
+
     const buttons = [option1El, option2El, option3El, option4El];
     buttons.forEach((button, index) => {
         button.textContent = options[index].texto;
         button.onclick = () => {
+            const endTime = new Date().getTime();
+            const responseTime = (endTime - startTime) / 1000;
             const isCorrect = button.textContent === correctAnswer;
-            window.pywebview.api.registrar_resposta(questionData, isCorrect);
+            window.pywebview.api.registrar_resposta(questionData, isCorrect, responseTime);
             feedbackEl.textContent = isCorrect ? 'Correto!' : `Errado! A resposta era ${correctAnswer}`;
             nextQuestionEl.style.display = 'block';
             buttons.forEach(btn => btn.disabled = true);
@@ -324,8 +332,17 @@ async function loadStatistics() {
 
     const stats = await window.pywebview.api.calcular_estatisticas_gerais();
     statsSummaryEl.innerHTML = `
-        <p>Total de Perguntas Respondidas: ${stats.total_respondidas}</p>
-        <p>Percentual de Acertos Geral: ${stats.percentual_acertos_geral}%</p>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Total de Perguntas Respondidas:</strong> ${stats.total_respondidas}</p>
+                <p><strong>Percentual de Acertos Geral:</strong> ${stats.percentual_acertos_geral}%</p>
+                <p><strong>Tempo Médio de Resposta:</strong> ${stats.tempo_medio_resposta_geral}s</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Questão Mais Lenta (Média):</strong> ${stats.questao_mais_lenta}</p>
+                <p><strong>Questão com Mais Erros Consecutivos:</strong> ${stats.questao_mais_errada_consecutivamente}</p>
+            </div>
+        </div>
     `;
 
     const heatmapData = await window.pywebview.api.gerar_dados_heatmap();
@@ -354,7 +371,7 @@ async function loadStatistics() {
     }
     proficiencyEl.innerHTML = proficiencyHTML;
 
-    let topDifficultiesHTML = '<h2>Maiores Dificuldades Atuais</h2>';
+    let topDifficultiesHTML = '<h2>Maiores Dificuldades Atuais (Peso)</h2>';
     stats.top_3_dificeis.forEach(item => {
         topDifficultiesHTML += `<p>${item}</p>`;
     });

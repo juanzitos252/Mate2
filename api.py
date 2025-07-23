@@ -1,6 +1,6 @@
 import random
 import time
-from config import salvar_configuracao, carregar_configuracao, salvar_tema
+from config import ConfigManager
 
 class Api:
     """
@@ -9,6 +9,7 @@ class Api:
     """
     def __init__(self):
         """Inicializa a API, carregando os dados ou criando novos."""
+        self.config_manager = ConfigManager()
         self.multiplicacoes_data = []
         self.custom_formulas_data = []
         self.pesos_tabuadas = {str(i): 1.0 for i in range(1, 11)}
@@ -373,33 +374,34 @@ class Api:
     def salvar_tema(self, tema):
         """Salva a preferência de tema do usuário."""
         self.tema_ativo = tema
-        # A função salvar_tema em config.py cuida de preservar os outros dados
-        salvar_tema(tema)
+        settings = self.config_manager.load_settings()
+        settings["theme"] = tema
+        self.config_manager.save_settings(settings)
 
     def load_initial_data(self):
         """Carrega os dados da configuração ou inicializa se não existirem."""
-        config = carregar_configuracao()
-        self.tema_ativo = config.get("tema_ativo", "colorido")
-        self.multiplicacoes_data = config.get("multiplicacoes_data", [])
-        self.custom_formulas_data = config.get("custom_formulas_data", [])
-        self.pesos_tabuadas = config.get("pesos_tabuadas", {str(i): 1.0 for i in range(1, 11)})
-        self.pontuacao_maxima_cronometrado = config.get("pontuacao_maxima_cronometrado", 0)
+        settings = self.config_manager.load_settings()
+        self.tema_ativo = settings.get("theme", "colorido")
+
+        user_data = self.config_manager.load_user_data()
+        self.multiplicacoes_data = user_data.get("multiplications_data", [])
+        self.custom_formulas_data = user_data.get("custom_formulas_data", [])
+        self.pesos_tabuadas = user_data.get("table_weights", {str(i): 1.0 for i in range(1, 11)})
+        self.pontuacao_maxima_cronometrado = user_data.get("timed_mode_highscore", 0)
 
         if not self.multiplicacoes_data:
             self.inicializar_multiplicacoes()
             self.salvar_dados()
 
-        return config
-
     def salvar_dados(self):
         """Salva todos os dados atuais na configuração."""
-        salvar_configuracao(
-            self.tema_ativo,
-            self.multiplicacoes_data,
-            self.custom_formulas_data,
-            self.pesos_tabuadas,
-            self.pontuacao_maxima_cronometrado
-        )
+        user_data = {
+            "multiplications_data": self.multiplicacoes_data,
+            "custom_formulas_data": self.custom_formulas_data,
+            "table_weights": self.pesos_tabuadas,
+            "timed_mode_highscore": self.pontuacao_maxima_cronometrado,
+        }
+        self.config_manager.save_user_data(user_data)
 
 
 FORMULAS_NOTAVEIS = [

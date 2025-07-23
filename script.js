@@ -522,9 +522,22 @@ function renderMemorizationScreen() {
     loadMemorization();
 }
 
+let memorizationState = {};
+
 async function loadMemorization() {
     const memorizationContentEl = document.getElementById('memorization-content');
     const tableNumber = await window.pywebview.api.sugerir_tabuada_para_memorizacao();
+
+    memorizationState = {
+        tableNumber: tableNumber,
+        questions: [],
+        currentQuestionIndex: 0,
+        correctAnswers: 0
+    };
+
+    for (let i = 1; i <= 10; i++) {
+        memorizationState.questions.push({ factor1: tableNumber, factor2: i });
+    }
 
     let tableHTML = `<h2>Memorize a Tabuada do ${tableNumber}</h2>`;
     tableHTML += '<table class="table table-bordered">';
@@ -534,34 +547,53 @@ async function loadMemorization() {
     tableHTML += '</table>';
     memorizationContentEl.innerHTML = tableHTML;
 
-    setTimeout(async () => {
-        const factor2 = Math.floor(Math.random() * 10) + 1;
-        const question = { fator1: tableNumber, fator2: factor2 };
+    setTimeout(loadMemorizationQuestion, 5000); // 5 segundos para memorizar
+}
 
-        memorizationContentEl.innerHTML = `
-            <h2>Qual é o resultado de ${tableNumber} x ${factor2}?</h2>
-            <input type="number" class="form-control" id="memorization-answer">
-            <button class="btn btn-primary mt-2" id="check-memorization-answer">Responder</button>
-            <p id="memorization-feedback"></p>
-        `;
+function loadMemorizationQuestion() {
+    const memorizationContentEl = document.getElementById('memorization-content');
+    const question = memorizationState.questions[memorizationState.currentQuestionIndex];
 
-        const answerEl = document.getElementById('memorization-answer');
-        const checkButton = document.getElementById('check-memorization-answer');
-        const feedbackEl = document.getElementById('memorization-feedback');
+    memorizationContentEl.innerHTML = `
+        <h2>Qual é o resultado de ${question.factor1} x ${question.factor2}?</h2>
+        <input type="number" class="form-control" id="memorization-answer">
+        <button class="btn btn-primary mt-2" id="check-memorization-answer">Responder</button>
+        <p id="memorization-feedback"></p>
+    `;
 
-        checkButton.onclick = () => {
-            const correctAnswer = tableNumber * factor2;
-            const isCorrect = parseInt(answerEl.value) === correctAnswer;
+    const answerEl = document.getElementById('memorization-answer');
+    const checkButton = document.getElementById('check-memorization-answer');
+    const feedbackEl = document.getElementById('memorization-feedback');
 
-            window.pywebview.api.registrar_resposta(question, isCorrect, 20); // Tempo fixo de 20s
+    checkButton.onclick = () => {
+        const correctAnswer = question.factor1 * question.factor2;
+        const isCorrect = parseInt(answerEl.value) === correctAnswer;
 
-            feedbackEl.textContent = isCorrect ? 'Correto!' : `Errado! A resposta era ${correctAnswer}`;
-            checkButton.disabled = true;
-            answerEl.disabled = true;
+        window.pywebview.api.registrar_resposta(question, isCorrect, 20);
 
-            setTimeout(loadMemorization, 2000); // Carrega próxima tabuada
-        };
-    }, 20000); // 20 segundos
+        if (isCorrect) {
+            memorizationState.correctAnswers++;
+            feedbackEl.textContent = 'Correto!';
+        } else {
+            feedbackEl.textContent = `Errado! A resposta era ${correctAnswer}`;
+        }
+
+        checkButton.disabled = true;
+        answerEl.disabled = true;
+
+        memorizationState.currentQuestionIndex++;
+
+        if (memorizationState.currentQuestionIndex < memorizationState.questions.length) {
+            setTimeout(loadMemorizationQuestion, 2000);
+        } else {
+            if (memorizationState.correctAnswers > 0) {
+                feedbackEl.textContent += ' Parabéns! Você acertou pelo menos uma. Passando para a próxima tabuada.';
+                setTimeout(loadMemorization, 3000);
+            } else {
+                feedbackEl.textContent += ' Fim de jogo! Você não acertou nenhuma questão.';
+            }
+        }
+    };
 }
 
 window.addEventListener('load', () => {

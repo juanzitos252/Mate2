@@ -11,11 +11,8 @@ class Api:
         """Inicializa a API, carregando os dados ou criando novos."""
         self.config_manager = ConfigManager()
         self.multiplicacoes_data = []
-        self.custom_formulas_data = []
         self.pesos_tabuadas = {str(i): 1.0 for i in range(1, 11)}
-        self.pontuacao_maxima_cronometrado = 0
         self.tema_ativo = "colorido"
-        self.current_custom_formula_for_quiz = None
         self.load_initial_data()
 
     def inicializar_multiplicacoes(self):
@@ -72,7 +69,21 @@ class Api:
 
         return random.choices(perguntas_potenciais, weights=prioridades, k=1)[0]
 
-    def _atualizar_dados_resposta(self, pergunta, acertou, tempo_resposta):
+    def registrar_resposta(self, pergunta_selecionada, acertou: bool, tempo_resposta: float = None, modo_jogo: str = 'quiz'):
+        """Registra a resposta do usuário, atualiza os dados e salva a configuração."""
+        if not pergunta_selecionada:
+            return
+
+        pergunta_ref = next((p for p in self.multiplicacoes_data
+                             if p['fator1'] == pergunta_selecionada['fator1'] and
+                                p['fator2'] == pergunta_selecionada['fator2']), None)
+
+        if pergunta_ref:
+            self._atualizar_dados_resposta(pergunta_ref, acertou, tempo_resposta, modo_jogo)
+            self._atualizar_pesos_tabuadas(pergunta_ref['fator1'], pergunta_ref['fator2'], acertou)
+            self.salvar_dados()
+
+    def _atualizar_dados_resposta(self, pergunta, acertou, tempo_resposta, modo_jogo):
         """Atualiza os dados de uma pergunta com base na resposta."""
         pergunta['vezes_apresentada'] = pergunta.get('vezes_apresentada', 0) + 1
         pergunta['ultima_vez_apresentada_ts'] = time.time()
@@ -83,8 +94,8 @@ class Api:
 
         if acertou:
             pergunta['vezes_correta'] = pergunta.get('vezes_correta', 0) + 1
-            fator_reducao = 0.7
-            if tempo_resposta is not None:
+            fator_reducao = 0.7 if modo_jogo == 'quiz' else 0.4 # Recompensa maior na memorização
+            if tempo_resposta is not None and modo_jogo == 'quiz':
                 if tempo_resposta < 2:
                     fator_reducao = 0.5
                 elif tempo_resposta < 5:
@@ -94,7 +105,8 @@ class Api:
             pergunta['peso'] = max(1.0, pergunta.get('peso', 10.0) * fator_reducao)
             pergunta['erros_consecutivos'] = 0
         else:
-            pergunta['peso'] = min(100.0, pergunta.get('peso', 10.0) * 1.6)
+            fator_aumento = 1.6 if modo_jogo == 'quiz' else 1.8 # Penalidade maior na memorização
+            pergunta['peso'] = min(100.0, pergunta.get('peso', 10.0) * fator_aumento)
             pergunta['erros_consecutivos'] = pergunta.get('erros_consecutivos', 0) + 1
 
         if tempo_resposta is not None:
@@ -112,21 +124,6 @@ class Api:
         else:
             self.pesos_tabuadas[f1_str] = min(100.0, self.pesos_tabuadas.get(f1_str, 1.0) * 1.1)
             self.pesos_tabuadas[f2_str] = min(100.0, self.pesos_tabuadas.get(f2_str, 1.0) * 1.1)
-
-    def registrar_resposta(self, pergunta_selecionada, acertou: bool, tempo_resposta: float = None):
-        """Registra a resposta do usuário, atualiza os dados e salva a configuração."""
-        if not pergunta_selecionada:
-            return
-
-        # Encontra a referência da pergunta nos dados da API para garantir a modificação
-        pergunta_ref = next((p for p in self.multiplicacoes_data
-                             if p['fator1'] == pergunta_selecionada['fator1'] and
-                                p['fator2'] == pergunta_selecionada['fator2']), None)
-
-        if pergunta_ref:
-            self._atualizar_dados_resposta(pergunta_ref, acertou, tempo_resposta)
-            self._atualizar_pesos_tabuadas(pergunta_ref['fator1'], pergunta_ref['fator2'], acertou)
-            self.salvar_dados()
 
     def gerar_opcoes(self, fator1: int, fator2: int):
         """Gera 4 opções de resposta para uma pergunta, incluindo a correta."""
@@ -185,36 +182,8 @@ class Api:
             if rand_num > 0 and rand_num not in opcoes:
                 opcoes.add(rand_num)
 
-    def gerar_opcoes_quiz_invertido(self, multiplicacao_base):
-        """Gera opções para o modo de quiz invertido."""
-        resposta_correta_valor = multiplicacao_base['fator1'] * multiplicacao_base['fator2']
-        opcao_correta = {'texto': f"{multiplicacao_base['fator1']} x {multiplicacao_base['fator2']}", 'is_correct': True}
-
-        opcoes = [opcao_correta]
-        candidatos = [item for item in self.multiplicacoes_data
-                      if item['fator1'] * item['fator2'] != resposta_correta_valor and
-                         (item['fator1'] != multiplicacao_base['fator1'] or item['fator2'] != multiplicacao_base['fator2'])]
-
-        random.shuffle(candidatos)
-
-        for candidato in candidatos:
-            if len(opcoes) >= 4:
-                break
-            opcoes.append({'texto': f"{candidato['fator1']} x {candidato['fator2']}", 'is_correct': False})
-
-        # Fallback se não houver candidatos suficientes
-        tentativas_fallback = 0
-        while len(opcoes) < 4 and tentativas_fallback < 50:
-            f1, f2 = random.randint(1, 10), random.randint(1, 10)
-            if f1 * f2 != resposta_correta_valor and not any(op['texto'] == f"{f1} x {f2}" for op in opcoes):
-                opcoes.append({'texto': f"{f1} x {f2}", 'is_correct': False})
-            tentativas_fallback += 1
-
-        random.shuffle(opcoes)
-        return opcoes[:4]
-
-    def sugerir_tabuada_para_treino(self):
-        """Sugere uma tabuada para o modo de treino com base nos pesos."""
+    def sugerir_tabuada_para_memorizacao(self):
+        """Sugere uma tabuada para o modo de memorização com base nos pesos."""
         if not self.multiplicacoes_data:
             return random.randint(1, 10)
 
@@ -222,29 +191,40 @@ class Api:
         if not any(v > 0 for v in media_pesos.values()):
             return random.randint(1, 10)
 
-        peso_maximo = max(media_pesos.values())
-        tabuadas_sugeridas = [tab for tab, peso in media_pesos.items() if peso == peso_maximo]
+        # Adiciona um pouco de aleatoriedade para não ficar sempre na mesma tabuada
+        tabuadas_ordenadas = sorted(media_pesos.items(), key=lambda item: item[1], reverse=True)
 
-        return random.choice(tabuadas_sugeridas)
+        # Pega as 3 com maior peso
+        top_3_tabuadas = [tab for tab, peso in tabuadas_ordenadas[:3]]
+
+        return random.choice(top_3_tabuadas)
 
     def _calcular_media_pesos_tabuadas(self):
         """Calcula a média de pesos para cada tabuada."""
         pesos_por_tabuada = {i: [] for i in range(1, 11)}
+        # Usar um conjunto para rastrear as multiplicações já consideradas para uma tabuada
+        # para evitar a contagem dupla (ex: 3x5 e 5x3).
+        # A chave será uma tupla ordenada dos fatores.
+        multiplicacoes_contabilizadas = {i: set() for i in range(1, 11)}
+
         for item in self.multiplicacoes_data:
             f1, f2, peso = item['fator1'], item['fator2'], item.get('peso', 10.0)
-            pesos_por_tabuada[f1].append(peso)
-            if f1 != f2:
+
+            fatores_ordenados = tuple(sorted((f1, f2)))
+
+            if fatores_ordenados not in multiplicacoes_contabilizadas[f1]:
+                pesos_por_tabuada[f1].append(peso)
+                multiplicacoes_contabilizadas[f1].add(fatores_ordenados)
+
+            if f1 != f2 and fatores_ordenados not in multiplicacoes_contabilizadas[f2]:
                 pesos_por_tabuada[f2].append(peso)
+                multiplicacoes_contabilizadas[f2].add(fatores_ordenados)
+
 
         return {
             tab: sum(pesos) / len(pesos) if pesos else 0
             for tab, pesos in pesos_por_tabuada.items()
         }
-
-    def sugerir_tabuada_para_memorizacao(self):
-        """Sugere uma tabuada para o modo de memorização."""
-        # A lógica pode ser a mesma do treino ou diferente no futuro.
-        return self.sugerir_tabuada_para_treino()
 
     def get_estatisticas_gerais(self):
         """Retorna um resumo das estatísticas gerais."""
@@ -374,34 +354,6 @@ class Api:
 
         return heatmap_data, min_peso, max_peso
 
-    def get_formula_definitions(self):
-        """Retorna as definições das fórmulas notáveis."""
-        return FORMULAS_NOTAVEIS
-
-    def get_saved_quiz_configs(self):
-        """Retorna as configurações de quiz salvas."""
-        return self.custom_formulas_data
-
-    def save_quiz_config(self, config):
-        """Salva uma nova configuração de quiz."""
-        if any(c['name'] == config['name'] for c in self.custom_formulas_data):
-            # Atualiza a configuração existente
-            self.custom_formulas_data = [c for c in self.custom_formulas_data if c['name'] != config['name']]
-        self.custom_formulas_data.append(config)
-        self.salvar_dados()
-
-    def set_current_custom_formula_for_quiz(self, config_name):
-        """Define a fórmula customizada para o próximo quiz."""
-        self.current_custom_formula_for_quiz = next(
-            (cfg for cfg in self.custom_formulas_data if cfg['name'] == config_name), None
-        )
-
-    def save_timed_mode_score(self, score):
-        """Salva a pontuação do modo cronometrado se for um novo recorde."""
-        if score > self.pontuacao_maxima_cronometrado:
-            self.pontuacao_maxima_cronometrado = score
-            self.salvar_dados()
-
     def salvar_tema(self, tema):
         """Salva a preferência de tema do usuário."""
         self.tema_ativo = tema
@@ -416,9 +368,7 @@ class Api:
 
         user_data = self.config_manager.load_user_data()
         self.multiplicacoes_data = user_data.get("multiplications_data", [])
-        self.custom_formulas_data = user_data.get("custom_formulas_data", [])
         self.pesos_tabuadas = user_data.get("table_weights", {str(i): 1.0 for i in range(1, 11)})
-        self.pontuacao_maxima_cronometrado = user_data.get("timed_mode_highscore", 0)
 
         if not self.multiplicacoes_data:
             self.inicializar_multiplicacoes()
@@ -428,42 +378,6 @@ class Api:
         """Salva todos os dados atuais na configuração."""
         user_data = {
             "multiplications_data": self.multiplicacoes_data,
-            "custom_formulas_data": self.custom_formulas_data,
             "table_weights": self.pesos_tabuadas,
-            "timed_mode_highscore": self.pontuacao_maxima_cronometrado,
         }
         self.config_manager.save_user_data(user_data)
-
-
-FORMULAS_NOTAVEIS = [
-    {
-        'id': "quadrado_soma",
-        'display_name': "Quadrado da Soma: (a+b)^2",
-        'variables': ['a', 'b'],
-        'calculation_function': lambda a, b: (a + b) ** 2,
-        'question_template': "Se a={a} e b={b}, qual o valor de (a+b)^2?",
-        'reminder_template': "(x+y)^2 = x^2 + 2xy + y^2",
-        'range_constraints': {},
-        'variable_labels': {'a': "Valor de 'a'", 'b': "Valor de 'b'"}
-    },
-    {
-        'id': "quadrado_diferenca",
-        'display_name': "Quadrado da Diferença: (a-b)^2",
-        'variables': ['a', 'b'],
-        'calculation_function': lambda a, b: (a - b) ** 2,
-        'question_template': "Se a={a} e b={b}, qual o valor de (a-b)^2?",
-        'reminder_template': "(x-y)^2 = x^2 - 2xy + y^2",
-        'range_constraints': {},
-        'variable_labels': {'a': "Valor de 'a'", 'b': "Valor de 'b'"}
-    },
-    {
-        'id': "produto_soma_diferenca",
-        'display_name': "Produto da Soma pela Diferença: (a+b)(a-b)",
-        'variables': ['a', 'b'],
-        'calculation_function': lambda a, b: a**2 - b**2,
-        'question_template': "Se a={a} e b={b}, qual o valor de (a+b)(a-b)?",
-        'reminder_template': "(x+y)(x-y) = x^2 - y^2",
-        'range_constraints': {'b': {'less_than_equal_a': True}},
-        'variable_labels': {'a': "Valor de 'a'", 'b': "Valor de 'b' (b <= a)"}
-    },
-]

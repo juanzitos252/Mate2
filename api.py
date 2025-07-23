@@ -1,6 +1,6 @@
 import random
 import time
-from config import salvar_configuracao, carregar_configuracao
+from config import salvar_configuracao, carregar_configuracao, salvar_tema
 
 class Api:
     def __init__(self):
@@ -319,9 +319,13 @@ class Api:
             self.pontuacao_maxima_cronometrado = score
             salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
+    def salvar_tema(self, tema):
+        self.tema_ativo_nome = tema
+        salvar_tema(tema)
+
     def load_initial_data(self):
         config = carregar_configuracao()
-        self.tema_ativo_nome = config.get("tema_ativo", "colorido")
+        self.tema_ativo_nome = config.get("tema_ativo_nome", "colorido")
         self.multiplicacoes_data = config.get("multiplicacoes_data")
         self.custom_formulas_data = config.get("custom_formulas_data", [])
         self.pesos_tabuadas = config.get("pesos_tabuadas", {str(i): 1.0 for i in range(1, 11)})
@@ -330,6 +334,8 @@ class Api:
         if not self.multiplicacoes_data:
             self.inicializar_multiplicacoes()
             salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
+
+        return config
 
 
 FORMULAS_NOTAVEIS = [

@@ -30,6 +30,20 @@ def salvar_configuracao(tema, multiplicacoes, formulas, pesos_tabuadas, pontuaca
     except (IOError, TypeError) as e:
         print(f"Erro ao salvar a configuração em {CONFIG_FILE}: {e}")
 
+def salvar_tema(tema):
+    """
+    Salva apenas a configuração do tema do usuário.
+    """
+    try:
+        os.makedirs(CONFIG_DIR, exist_ok=True)
+        config_existente = carregar_configuracao() if os.path.exists(CONFIG_FILE) else {}
+        config_existente["tema_ativo_nome"] = tema
+
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config_existente, f, indent=4, ensure_ascii=False)
+    except (IOError, TypeError) as e:
+        print(f"Erro ao salvar o tema em {CONFIG_FILE}: {e}")
+
 def criar_configuracao_padrao():
     """
     Cria um arquivo de configuração padrão se ele não existir.

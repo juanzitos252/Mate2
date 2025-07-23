@@ -610,17 +610,17 @@ const body = document.body;
 function setTheme(theme) {
     body.className = theme;
     themeToggle.textContent = theme === 'dark-theme' ? '☀️' : '🌙';
-    localStorage.setItem('theme', theme);
+    window.pywebview.api.salvar_tema(theme);
 }
 
 themeToggle.addEventListener('click', () => {
-    const currentTheme = localStorage.getItem('theme') || 'light-theme';
-    const newTheme = currentTheme === 'light-theme' ? 'dark-theme' : 'light-theme';
+    const newTheme = body.className === 'light-theme' ? 'dark-theme' : 'light-theme';
     setTheme(newTheme);
 });
 
-window.addEventListener('load', () => {
-    const savedTheme = localStorage.getItem('theme') || 'light-theme';
+window.addEventListener('load', async () => {
+    const initialData = await window.pywebview.api.load_initial_data();
+    const savedTheme = initialData.tema_ativo_nome || 'light-theme';
     setTheme(savedTheme);
 });
 

@@ -9,15 +9,24 @@ def main():
     repo_path = os.path.dirname(os.path.abspath(__file__))
     repo_url = "https://github.com/juanzitos252/Mate2"
 
-    # Fetch the latest changes from the remote repository
     try:
+        # Try to open the repository
         repo = git.Repo(repo_path)
-        origin = repo.remotes.origin
-        origin.set_url(repo_url)
     except git.exc.InvalidGitRepositoryError:
-        repo = git.Repo.clone_from(repo_url, repo_path)
-        origin = repo.remotes.origin
+        # If it's not a git repository, check if the directory is empty
+        if not os.listdir(repo_path):
+            # If it's empty, clone the repository
+            repo = git.Repo.clone_from(repo_url, repo_path)
+        else:
+            # If it's not empty, initialize a new repository and fetch the code
+            repo = git.Repo.init(repo_path)
+            origin = repo.create_remote('origin', repo_url)
+            origin.fetch()
+            repo.git.reset('--hard', 'origin/main')
 
+    # Fetch the latest changes from the remote repository
+    origin = repo.remotes.origin
+    origin.set_url(repo_url)
     origin.fetch()
 
     # Check if there are new commits

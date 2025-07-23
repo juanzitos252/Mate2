@@ -51,9 +51,16 @@ def criar_configuracao_padrao():
     if not os.path.exists(CONFIG_FILE):
         print(f"Arquivo de configuração não encontrado. Criando um novo em {CONFIG_FILE}")
         # Define uma configuração padrão mínima
+        multiplicacoes_data = []
+        for i in range(1, 11):
+            for j in range(1, 11):
+                multiplicacoes_data.append({
+                    'fator1': i, 'fator2': j, 'peso': 10.0, 'historico_erros': [],
+                    'vezes_apresentada': 0, 'vezes_correta': 0, 'ultima_vez_apresentada_ts': 0.0
+                })
         config_padrao = {
             "tema_ativo_nome": "colorido", # Um tema padrão
-            "multiplicacoes_data": None, # Será inicializado no main.py se for None
+            "multiplicacoes_data": multiplicacoes_data, # Será inicializado no main.py se for None
             "custom_formulas_data": [], # Começa com nenhuma fórmula personalizada
             "pesos_tabuadas": {str(i): 1.0 for i in range(1, 11)},
             "pontuacao_maxima_cronometrado": 0

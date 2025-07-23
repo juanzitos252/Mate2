@@ -203,7 +203,7 @@ class Api:
         return self.sugerir_tabuada_para_treino()
 
     def calcular_estatisticas_gerais(self):
-        if not self.multiplicacoes_data or all(p['vezes_apresentada'] == 0 for p in self.multiplicacoes_data):
+        if not self.multiplicacoes_data or all(p.get('vezes_apresentada', 0) == 0 for p in self.multiplicacoes_data):
             return {
                 'total_respondidas': 0,
                 'percentual_acertos_geral': 0,
@@ -213,8 +213,8 @@ class Api:
                 'questao_mais_errada_consecutivamente': 'N/A'
             }
 
-        total_respondidas = sum(item['vezes_apresentada'] for item in self.multiplicacoes_data)
-        total_acertos = sum(item['vezes_correta'] for item in self.multiplicacoes_data)
+        total_respondidas = sum(item.get('vezes_apresentada', 0) for item in self.multiplicacoes_data)
+        total_acertos = sum(item.get('vezes_correta', 0) for item in self.multiplicacoes_data)
         percentual_acertos_geral = (total_acertos / total_respondidas * 100) if total_respondidas > 0 else 0
 
         # Métricas de dificuldade

@@ -149,8 +149,13 @@ async function apiCall(func, ...args) {
     }
 }
 
-function render(template) {
-    app.innerHTML = template();
+function render(templateName) {
+    const template = document.querySelector(`[data-template="${templateName}"]`);
+    if (template) {
+        app.innerHTML = template.innerHTML;
+    } else {
+        console.error(`Template "${templateName}" não encontrado.`);
+    }
 }
 
 function navigateTo(route) {
@@ -370,8 +375,7 @@ function router() {
     const route = window.location.hash.substring(1) || 'home';
     state.currentRoute = route;
 
-    const template = templates[route] || templates['home'];
-    render(template);
+    render(route);
 
     const logic = screenLogics[route] || (() => {});
     logic();

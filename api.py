@@ -6,6 +6,7 @@ class Api:
     def __init__(self):
         self.multiplicacoes_data = []
         self.custom_formulas_data = []
+        self.pesos_tabuadas = {str(i): 1.0 for i in range(1, 11)}
         self.pontuacao_maxima_cronometrado = 0
         self.tema_ativo_nome = "colorido"
         self.current_custom_formula_for_quiz = None
@@ -36,8 +37,12 @@ class Api:
                 erros_recentes = sum(1 for erro in pergunta_item['historico_erros'] if erro)
                 fator_erro_recente = 1 + (erros_recentes / len(pergunta_item['historico_erros']))
             fator_novidade = 1 / (1 + pergunta_item['vezes_apresentada'] * 0.05)
-            prioridade = fator_peso * fator_erro_recente * fator_novidade
-            perguntas_elegiveis_com_prioridade.append({'prioridade': prioridade, 'pergunta_original': pergunta_item})
+            prioridade_base = fator_peso * fator_erro_recente * fator_novidade
+            fator1 = str(pergunta_item['fator1'])
+            fator2 = str(pergunta_item['fator2'])
+            fator_ajuste_tabuada = (self.pesos_tabuadas[fator1] + self.pesos_tabuadas[fator2]) / 2
+            prioridade_final = prioridade_base * fator_ajuste_tabuada
+            perguntas_elegiveis_com_prioridade.append({'prioridade': prioridade_final, 'pergunta_original': pergunta_item})
         if not perguntas_elegiveis_com_prioridade:
             return random.choice(self.multiplicacoes_data) if self.multiplicacoes_data else None
         prioridades = [p['prioridade'] for p in perguntas_elegiveis_com_prioridade]
@@ -56,9 +61,28 @@ class Api:
         # Atualiza o peso com base na resposta
         if acertou:
             pergunta_selecionada_ref['vezes_correta'] += 1
-            pergunta_selecionada_ref['peso'] = max(1.0, pergunta_selecionada_ref['peso'] * 0.7)
+            if tempo_resposta is not None:
+                if tempo_resposta < 2:
+                    fator_reducao = 0.5
+                elif tempo_resposta < 5:
+                    fator_reducao = 0.7
+                else:
+                    fator_reducao = 0.9
+            else:
+                fator_reducao = 0.7
+            pergunta_selecionada_ref['peso'] = max(1.0, pergunta_selecionada_ref['peso'] * fator_reducao)
         else:
             pergunta_selecionada_ref['peso'] = min(100.0, pergunta_selecionada_ref['peso'] * 1.6)
+
+        # Atualiza os pesos das tabuadas
+        fator1 = str(pergunta_selecionada_ref['fator1'])
+        fator2 = str(pergunta_selecionada_ref['fator2'])
+        if acertou:
+            self.pesos_tabuadas[fator1] *= 0.95
+            self.pesos_tabuadas[fator2] *= 0.95
+        else:
+            self.pesos_tabuadas[fator1] = min(100.0, self.pesos_tabuadas[fator1] * 1.1)
+            self.pesos_tabuadas[fator2] = min(100.0, self.pesos_tabuadas[fator2] * 1.1)
 
         # Processa o tempo de resposta, se fornecido
         if tempo_resposta is not None:
@@ -73,7 +97,7 @@ class Api:
         else:
             pergunta_selecionada_ref['erros_consecutivos'] = 0
 
-        salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pontuacao_maxima_cronometrado)
+        salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
     def gerar_opcoes(self, fator1: int, fator2: int):
         resposta_correta = fator1 * fator2
@@ -269,7 +293,7 @@ class Api:
 
     def save_quiz_config(self, config):
         self.custom_formulas_data.append(config)
-        salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pontuacao_maxima_cronometrado)
+        salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
     def set_current_custom_formula_for_quiz(self, config_name):
         self.current_custom_formula_for_quiz = next((cfg for cfg in self.custom_formulas_data if cfg['name'] == config_name), None)
@@ -277,18 +301,19 @@ class Api:
     def save_timed_mode_score(self, score):
         if score > self.pontuacao_maxima_cronometrado:
             self.pontuacao_maxima_cronometrado = score
-            salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pontuacao_maxima_cronometrado)
+            salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
     def load_initial_data(self):
         config = carregar_configuracao()
         self.tema_ativo_nome = config.get("tema_ativo", "colorido")
         self.multiplicacoes_data = config.get("multiplicacoes_data")
         self.custom_formulas_data = config.get("custom_formulas_data", [])
+        self.pesos_tabuadas = config.get("pesos_tabuadas", {str(i): 1.0 for i in range(1, 11)})
         self.pontuacao_maxima_cronometrado = config.get("pontuacao_maxima_cronometrado", 0)
 
         if not self.multiplicacoes_data:
             self.inicializar_multiplicacoes()
-            salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pontuacao_maxima_cronometrado)
+            salvar_configuracao(self.tema_ativo_nome, self.multiplicacoes_data, self.custom_formulas_data, self.pesos_tabuadas, self.pontuacao_maxima_cronometrado)
 
 
 FORMULAS_NOTAVEIS = [

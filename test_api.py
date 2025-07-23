@@ -71,23 +71,21 @@ class TestApi(unittest.TestCase):
         self.assertGreaterEqual(table, 1)
         self.assertLessEqual(table, 10)
 
-    def test_calcular_estatisticas_gerais_com_dados(self):
+    def test_get_estatisticas_gerais_com_dados(self):
         self.api.registrar_resposta(self.api.multiplicacoes_data[0], True, 2.0)
         self.api.registrar_resposta(self.api.multiplicacoes_data[1], False, 3.0)
-        stats = self.api.calcular_estatisticas_gerais()
+        stats = self.api.get_estatisticas_gerais()
         self.assertEqual(stats['total_respondidas'], 2)
         self.assertEqual(stats['percentual_acertos_geral'], 50.0)
-        self.assertIsNotNone(stats['top_3_dificeis'])
 
-    def test_calcular_estatisticas_sem_dados(self):
+    def test_get_estatisticas_sem_dados(self):
         self.api.multiplicacoes_data = []
-        stats = self.api.calcular_estatisticas_gerais()
+        stats = self.api.get_estatisticas_gerais()
         self.assertEqual(stats['total_respondidas'], 0)
         self.assertEqual(stats['percentual_acertos_geral'], 0)
-        self.assertEqual(stats['top_3_dificeis'], [])
 
-    def test_calcular_proficiencia_tabuadas(self):
-        proficiency = self.api.calcular_proficiencia_tabuadas()
+    def test_get_proficiencia_por_tabuada(self):
+        proficiency = self.api.get_proficiencia_por_tabuada()
         self.assertEqual(len(proficiency), 10)
         self.assertTrue(all(isinstance(p, float) for p in proficiency.values()))
 

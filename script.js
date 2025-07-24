@@ -88,7 +88,9 @@ const screenLogics = {
                 button.addEventListener('click', () => {
                     const responseTime = (Date.now() - startTime) / 1000;
                     const isCorrect = parseInt(button.textContent) === correctAnswer;
-                    apiCall('registrar_resposta', state.currentQuestion, isCorrect, responseTime);
+
+                    // Sempre registrar o tempo de resposta
+                    apiCall('registrar_resposta', state.currentQuestion, isCorrect, responseTime, 'quiz');
 
                     feedbackEl.textContent = isCorrect ? 'Correto!' : `Errado! A resposta era ${correctAnswer}`;
                     feedbackEl.className = isCorrect ? 'text-success' : 'text-danger';
